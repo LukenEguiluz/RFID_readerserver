@@ -244,6 +244,7 @@
                         <th>ID</th>
                         <th>Nombre</th>
                         <th>Hostname/IP</th>
+                        <th>Marca</th>
                         <th>Estado</th>
                         <th>Habilitado</th>
                         <th>Acciones</th>
@@ -254,6 +255,7 @@
                         <td th:text="${reader.id}"></td>
                         <td th:text="${reader.name}"></td>
                         <td th:text="${reader.hostname}"></td>
+                        <td th:text="${reader.brand != null ? reader.brand.name() : 'IMPINJ_OCTANE'}">IMPINJ</td>
                         <td>
                             <span th:if="${reader.isConnected != null and reader.isConnected}" 
                                   class="status status-connected">Conectado</span>
@@ -268,6 +270,8 @@
                         </td>
                         <td>
                             <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                <a th:href="@{/readers/{id}/antennas(id=${reader.id})}" 
+                                   class="btn btn-small" style="background: #2b6cb0;">📡 Antenas</a>
                                 <a th:href="@{/readers/{id}/edit(id=${reader.id})}" 
                                    class="btn btn-small">✏️ Editar</a>
                                 <form th:action="@{/readers/{id}/connect(id=${reader.id})}" 

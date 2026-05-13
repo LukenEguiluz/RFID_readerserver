@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antenas del lector - doHealth RFID Gateway</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .box { background: white; padding: 24px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; }
+        input[type="text"], input[type="number"] { width: 100%; max-width: 280px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; }
+        .btn { display: inline-block; padding: 10px 18px; background: #dc2626; color: white; text-decoration: none; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; margin: 4px 8px 4px 0; }
+        .btn:hover { background: #b91c1c; }
+        .btn-secondary { background: #718096; }
+        .btn-success { background: #48bb78; }
+        .btn-info { background: #3182ce; }
+        .alert-success { background: #c6f6d5; color: #22543d; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
+        .alert-error { background: #fed7d7; color: #742a2a; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #edf2f7; }
+        .hint { font-size: 12px; color: #718096; margin-top: 6px; }
+        dl { display: grid; grid-template-columns: 160px 1fr; gap: 6px 12px; font-size: 14px; }
+        dt { color: #718096; }
+        dd { font-weight: 500; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📡 Antenas</h1>
+        <p th:text="${reader.name} + ' (' + ${reader.id} + ')'">Lector</p>
+        <p class="hint" th:text="'Marca: ' + ${reader.brand}">Marca</p>
+        <a href="/readers" class="btn btn-secondary">← Lectores</a>
+        <a th:href="@{/readers/{id}/edit(id=${reader.id})}" class="btn btn-secondary">Editar lector</a>
+    </div>
+
+    <div th:if="${success}" class="alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert-error" th:text="${error}"></div>
+
+    <div class="box" th:if="${hardware != null}">
+        <h2 style="margin-bottom:12px;">Hardware (Impinj conectado)</h2>
+        <dl>
+            <dt>Modelo</dt>
+            <dd th:text="${hardware.modelName}">—</dd>
+            <dt>Número modelo</dt>
+            <dd th:text="${hardware.modelNumber}">—</dd>
+            <dt>Firmware</dt>
+            <dd th:text="${hardware.firmwareVersion}">—</dd>
+            <dt>Puertos de antena (según lector)</dt>
+            <dd th:text="${hardware.antennaCount}">—</dd>
+            <dt>XArray</dt>
+            <dd th:text="${hardware.xArray} ? 'Sí' : 'No'">—</dd>
+        </dl>
+        <p class="hint" th:if="${hardware.xArray}">XArray usa identificadores de antena especiales; la detección automática cubre el conteo estándar. Ajuste manual si Impinj lo requiere.</p>
+    </div>
+
+    <div class="box" th:if="${reader.brand != null and reader.brand.name() != 'IMPINJ_OCTANE'}">
+        <p>La detección automática de antenas vía Octane solo aplica a marca <strong>IMPINJ_OCTANE</strong>. Para otras marcas, defina antenas manualmente cuando exista el driver.</p>
+    </div>
+
+    <div class="box" th:if="${reader.brand != null and reader.brand.name() == 'IMPINJ_OCTANE'}">
+        <h2 style="margin-bottom:10px;">Detectar desde el lector</h2>
+        <p class="hint">Consulta <code>queryFeatureSet()</code> (número de antenas físicas) y crea/actualiza filas en la base para los puertos 1…N. El lector debe estar <strong>conectado</strong>.</p>
+        <form th:action="@{/readers/{id}/antennas/discover(id=${reader.id})}" method="post">
+            <button type="submit" class="btn btn-info">Detectar y sincronizar antenas</button>
+        </form>
+    </div>
+
+    <div class="box">
+        <h2 style="margin-bottom:10px;">Añadir o editar por puerto</h2>
+        <p class="hint">ID de antena: <code th:text="${reader.id} + '-antenna-'">&lt;reader&gt;-antenna-</code>&lt;puerto&gt;</p>
+        <form th:action="@{/readers/{rid}/antennas(rid=${reader.id})}" method="post" style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
+            <div class="form-group">
+                <label for="portNumber">Puerto (1…)</label>
+                <input type="number" id="portNumber" name="portNumber" min="1" max="512" required />
+            </div>
+            <div class="form-group" style="flex:1; min-width:200px;">
+                <label for="name">Nombre (opcional)</label>
+                <input type="text" id="name" name="name" placeholder="ej. Entrada principal" />
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">Guardar antena</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="box">
+        <h2 style="margin-bottom:10px;">Antenas configuradas</h2>
+        <table th:if="${antennas != null and !antennas.empty}">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Puerto</th>
+                <th>Nombre</th>
+                <th>Activa</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="a : ${antennas}">
+                <td th:text="${a.id}"></td>
+                <td th:text="${a.portNumber}"></td>
+                <td th:text="${a.name}"></td>
+                <td th:text="${a.enabled} ? 'Sí' : 'No'"></td>
+            </tr>
+            </tbody>
+        </table>
+        <p th:if="${antennas == null or antennas.empty}" class="hint">No hay antenas en base de datos. Use detección o el formulario superior.</p>
+    </div>
+
+    <div class="box">
+        <h3 style="margin-bottom:8px;">API REST</h3>
+        <p class="hint"><code>GET /api/readers/<span th:text="${reader.id}"></span>/hardware</code> — capacidades en JSON</p>
+        <p class="hint"><code>POST /api/readers/<span th:text="${reader.id}"></span>/antennas/discover</code> — mismo efecto que el botón</p>
+    </div>
+</div>
+</body>
+</html>

@@ -13,7 +13,7 @@
         .form-box { background: white; padding: 24px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; font-weight: 600; color: #333; margin-bottom: 6px; }
-        .form-group input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; }
+        .form-group input[type="text"], .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; }
         .form-group input[type="checkbox"] { width: 18px; height: 18px; margin-right: 8px; vertical-align: middle; }
         .btn { display: inline-block; padding: 10px 20px; background: #dc2626; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; font-size: 14px; margin-right: 10px; }
         .btn:hover { background: #b91c1c; }
@@ -42,6 +42,13 @@
                 <div class="form-group">
                     <label for="name">Nombre *</label>
                     <input type="text" id="name" th:field="*{name}" required placeholder="ej: Lector Principal" />
+                </div>
+                <div class="form-group">
+                    <label for="brand">Marca del lector</label>
+                    <select id="brand" th:field="*{brand}">
+                        <option th:each="b : ${T(com.rfidgateway.model.ReaderBrand).values()}" th:value="${b}" th:text="${b}"></option>
+                    </select>
+                    <p class="hint">Solo <strong>IMPINJ_OCTANE</strong> conecta hoy vía Octane SDK.</p>
                 </div>
                 <div class="form-group">
                     <label for="hostname">Hostname o IP *</label>

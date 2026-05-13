@@ -25,7 +25,41 @@ public class AntennaController {
     
     @Autowired(required = false)
     private ReaderManager readerManager;
-    
+
+    @PostMapping
+    public ResponseEntity<?> createAntenna(@RequestBody Antenna body) {
+        if (body.getReaderId() == null || body.getReaderId().isBlank()
+            || body.getPortNumber() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "readerId y portNumber son obligatorios"));
+        }
+        if (!readerRepository.existsById(body.getReaderId())) {
+            return ResponseEntity.status(404).body(Map.of("error", "Lector no encontrado"));
+        }
+        String id = body.getReaderId() + "-antenna-" + body.getPortNumber();
+        if (body.getId() != null && !body.getId().isBlank()) {
+            id = body.getId().trim();
+        }
+        if (antennaRepository.existsById(id)
+            || antennaRepository.findByReaderIdAndPortNumber(body.getReaderId(), body.getPortNumber()).isPresent()) {
+            return ResponseEntity.status(409).body(Map.of("error", "Ya existe antena para ese lector y puerto"));
+        }
+        Antenna a = new Antenna();
+        a.setId(id);
+        a.setReaderId(body.getReaderId());
+        a.setPortNumber(body.getPortNumber());
+        a.setName(body.getName() != null && !body.getName().isBlank()
+            ? body.getName().trim()
+            : "Puerto " + body.getPortNumber());
+        a.setEnabled(body.getEnabled() != null ? body.getEnabled() : true);
+        a.setTxPowerDbm(body.getTxPowerDbm());
+        a.setRxSensitivityDbm(body.getRxSensitivityDbm());
+        Antenna saved = antennaRepository.save(a);
+        if (readerManager != null) {
+            readerManager.resetAntennas(body.getReaderId());
+        }
+        return ResponseEntity.ok(saved);
+    }
+
     @GetMapping
     public ResponseEntity<List<Antenna>> getAllAntennas() {
         List<Antenna> antennas = antennaRepository.findAll();
@@ -45,7 +79,7 @@ public class AntennaController {
             return ResponseEntity.notFound().build();
         }
         
-        List<Antenna> antennas = antennaRepository.findByReaderId(readerId);
+        List<Antenna> antennas = antennaRepository.findByReaderIdOrderByPortNumberAsc(readerId);
         return ResponseEntity.ok(antennas);
     }
     

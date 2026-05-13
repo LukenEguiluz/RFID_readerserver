@@ -1,7 +1,6 @@
 package com.rfidgateway.controller;
 
 import com.rfidgateway.model.Reader;
-import com.rfidgateway.reader.ReaderManager;
 import com.rfidgateway.repository.ReaderRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,10 +22,10 @@ import java.util.stream.Collectors;
 public class StatusController {
     
     @Autowired
-    private ReaderRepository readerRepository;
-    
+    private DataSource dataSource;
+
     @Autowired
-    private ReaderManager readerManager;
+    private ReaderRepository readerRepository;
     
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> getStatus() {
@@ -54,9 +55,27 @@ public class StatusController {
         return ResponseEntity.ok(status);
     }
     
+    /**
+     * Incluye comprobación JDBC para que Docker/K8s no marquen el contenedor como sano
+     * si PostgreSQL no responde (evita formularios que fallan al guardar).
+     */
     @GetMapping("/health")
-    public ResponseEntity<Map<String, String>> health() {
-        return ResponseEntity.ok(Map.of("status", "UP"));
+    public ResponseEntity<Map<String, Object>> health() {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", "UP");
+        try (Connection c = dataSource.getConnection()) {
+            if (c.isValid(5)) {
+                body.put("database", "UP");
+                return ResponseEntity.ok(body);
+            }
+            body.put("database", "DOWN");
+            return ResponseEntity.status(503).body(body);
+        } catch (Exception e) {
+            log.warn("Health DB: {}", e.getMessage());
+            body.put("database", "DOWN");
+            body.put("detail", e.getClass().getSimpleName());
+            return ResponseEntity.status(503).body(body);
+        }
     }
 
     /** Comprueba que la API responde (útil para verificar que el código desplegado es el nuevo). */

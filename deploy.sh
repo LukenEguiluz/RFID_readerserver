@@ -49,6 +49,7 @@ wait_for_postgres() {
   for i in $(seq 1 45); do
     if docker compose -f "$DB_COMPOSE" exec -T postgres pg_isready -U rfiduser -d rfidgateway >/dev/null 2>&1; then
       echo "PostgreSQL listo."
+      sleep 3
       return 0
     fi
     sleep 2

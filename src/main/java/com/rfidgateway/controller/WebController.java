@@ -1,10 +1,13 @@
 package com.rfidgateway.controller;
 
 import com.rfidgateway.inventory.InventoryOrchestrationService;
+import com.rfidgateway.model.Antenna;
 import com.rfidgateway.model.Reader;
+import com.rfidgateway.model.ReaderBrand;
 import com.rfidgateway.model.ReaderGroup;
 import com.rfidgateway.model.ReaderOperationMode;
 import com.rfidgateway.reader.ReaderManager;
+import com.rfidgateway.repository.AntennaRepository;
 import com.rfidgateway.repository.InventorySystemReaderRepository;
 import com.rfidgateway.repository.InventorySystemRepository;
 import com.rfidgateway.repository.ReaderGroupRepository;
@@ -29,6 +32,9 @@ public class WebController {
 
     @Autowired
     private ReaderRepository readerRepository;
+
+    @Autowired
+    private AntennaRepository antennaRepository;
 
     @Autowired
     private ReaderGroupRepository readerGroupRepository;
@@ -79,7 +85,9 @@ public class WebController {
 
     @GetMapping("/readers/new")
     public String readerNew(Model model) {
-        model.addAttribute("reader", new Reader());
+        Reader r = new Reader();
+        r.setBrand(ReaderBrand.IMPINJ_OCTANE);
+        model.addAttribute("reader", r);
         return "reader-form";
     }
 
@@ -92,6 +100,9 @@ public class WebController {
             }
             if (reader.getEnabled() == null) {
                 reader.setEnabled(true);
+            }
+            if (reader.getBrand() == null) {
+                reader.setBrand(ReaderBrand.IMPINJ_OCTANE);
             }
             reader.setIsConnected(false);
             reader.setIsReading(false);
@@ -141,6 +152,9 @@ public class WebController {
                 existing.setEnabled(reader.getEnabled() != null ? reader.getEnabled() : true);
                 if (reader.getOperationMode() != null) {
                     existing.setOperationMode(reader.getOperationMode());
+                }
+                if (reader.getBrand() != null) {
+                    existing.setBrand(reader.getBrand());
                 }
                 if (existing.getOperationMode() == ReaderOperationMode.TUNNEL) {
                     existing.setInventorySystemId(null);
@@ -208,6 +222,70 @@ public class WebController {
             redirect.addFlashAttribute("error", "No se pudo eliminar.");
         }
         return "redirect:/readers";
+    }
+
+    @GetMapping("/readers/{id}/antennas")
+    public String readerAntennas(@PathVariable String id, Model model) {
+        return readerRepository.findById(id)
+            .map(reader -> {
+                model.addAttribute("reader", reader);
+                model.addAttribute("antennas", antennaRepository.findByReaderIdOrderByPortNumberAsc(id));
+                if (readerManager != null) {
+                    readerManager.queryHardwareCapabilities(id).ifPresent(h -> model.addAttribute("hardware", h));
+                }
+                return "reader-antennas";
+            })
+            .orElse("redirect:/readers");
+    }
+
+    @PostMapping("/readers/{id}/antennas/discover")
+    public String readerAntennasDiscover(@PathVariable String id, RedirectAttributes redirect) {
+        try {
+            if (readerManager == null) {
+                redirect.addFlashAttribute("error", "ReaderManager no disponible.");
+            } else {
+                int n = readerManager.discoverAndSyncAntennas(id);
+                redirect.addFlashAttribute("success", "Detectadas y sincronizadas " + n + " antena(s) desde el lector.");
+            }
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/readers/" + id + "/antennas";
+    }
+
+    @PostMapping("/readers/{readerId}/antennas")
+    public String readerAntennaAdd(@PathVariable String readerId,
+                                   @RequestParam Short portNumber,
+                                   @RequestParam(required = false) String name,
+                                   RedirectAttributes redirect) {
+        if (!readerRepository.existsById(readerId)) {
+            return "redirect:/readers";
+        }
+        try {
+            String aid = readerId + "-antenna-" + portNumber;
+            Antenna a = antennaRepository.findByReaderIdAndPortNumber(readerId, portNumber).orElseGet(() -> {
+                Antenna na = new Antenna();
+                na.setId(aid);
+                na.setReaderId(readerId);
+                na.setPortNumber(portNumber);
+                na.setEnabled(true);
+                return na;
+            });
+            if (name != null && !name.isBlank()) {
+                a.setName(name.trim());
+            } else if (a.getName() == null || a.getName().isBlank()) {
+                a.setName("Puerto " + portNumber);
+            }
+            a.setEnabled(true);
+            antennaRepository.save(a);
+            if (readerManager != null) {
+                readerManager.resetAntennas(readerId);
+            }
+            redirect.addFlashAttribute("success", "Antena guardada. Si el lector estaba conectado, se reaplicó la configuración.");
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "No se pudo guardar la antena: " + e.getMessage());
+        }
+        return "redirect:/readers/" + readerId + "/antennas";
     }
 
     @GetMapping("/tags")

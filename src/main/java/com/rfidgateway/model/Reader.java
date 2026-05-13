@@ -30,6 +30,11 @@ public class Reader {
     @Column(name = "operation_mode", nullable = false, length = 32)
     private ReaderOperationMode operationMode = ReaderOperationMode.TUNNEL;
 
+    /** Marca del lector: define qué driver/SDK usa el gateway para comandos y descubrimiento. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "brand", nullable = false, length = 32)
+    private ReaderBrand brand = ReaderBrand.IMPINJ_OCTANE;
+
     @Column(name = "inventory_system_id", length = 64)
     private String inventorySystemId;
 
@@ -53,10 +58,16 @@ public class Reader {
         if (operationMode == null) {
             operationMode = ReaderOperationMode.TUNNEL;
         }
+        if (brand == null) {
+            brand = ReaderBrand.IMPINJ_OCTANE;
+        }
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
+        if (brand == null) {
+            brand = ReaderBrand.IMPINJ_OCTANE;
+        }
     }
 }

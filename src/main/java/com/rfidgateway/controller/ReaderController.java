@@ -1,6 +1,8 @@
 package com.rfidgateway.controller;
 
 import com.rfidgateway.model.Reader;
+import com.rfidgateway.model.ReaderBrand;
+import com.rfidgateway.model.ReaderHardwareInfo;
 import com.rfidgateway.model.ReaderOperationMode;
 import com.rfidgateway.reader.ReaderManager;
 import com.rfidgateway.repository.ReaderRepository;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -46,6 +49,7 @@ public class ReaderController {
                 status.put("connected", Boolean.TRUE.equals(r.getIsConnected()));
                 status.put("reading", Boolean.TRUE.equals(r.getIsReading()));
                 status.put("operationMode", r.getOperationMode() != null ? r.getOperationMode().name() : ReaderOperationMode.TUNNEL.name());
+                status.put("brand", r.getBrand() != null ? r.getBrand().name() : ReaderBrand.IMPINJ_OCTANE.name());
                 return ResponseEntity.<Map<String, Object>>ok(status);
             })
             .orElse(ResponseEntity.notFound().build());
@@ -63,6 +67,9 @@ public class ReaderController {
         reader.setIsReading(false);
         reader.setOperationMode(ReaderOperationMode.TUNNEL);
         reader.setInventorySystemId(null);
+        if (reader.getBrand() == null) {
+            reader.setBrand(ReaderBrand.IMPINJ_OCTANE);
+        }
         return ResponseEntity.ok(readerRepository.save(reader));
     }
 
@@ -72,6 +79,9 @@ public class ReaderController {
             .map(existing -> {
                 existing.setName(reader.getName());
                 existing.setHostname(reader.getHostname());
+                if (reader.getBrand() != null) {
+                    existing.setBrand(reader.getBrand());
+                }
                 if (reader.getEnabled() != null) {
                     existing.setEnabled(reader.getEnabled());
                 }
@@ -163,5 +173,45 @@ public class ReaderController {
             return ResponseEntity.ok(Map.of("message", "Antennas configuration reset", "readerId", id));
         }
         return ResponseEntity.status(503).body(Map.of("error", "ReaderManager no disponible"));
+    }
+
+    /** Capacidades del lector (Impinj conectado): modelo, firmware, número de antenas físicas. */
+    @GetMapping("/{id}/hardware")
+    public ResponseEntity<?> getHardware(@PathVariable String id) {
+        if (!readerRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        if (readerManager == null) {
+            return ResponseEntity.status(503).body(Map.of("error", "ReaderManager no disponible"));
+        }
+        Optional<ReaderHardwareInfo> cap = readerManager.queryHardwareCapabilities(id);
+        if (cap.isPresent()) {
+            return ResponseEntity.ok(cap.get());
+        }
+        return ResponseEntity.status(404).body(Map.of(
+            "error", "Sin datos: lector Impinj conectado requerido, o marca distinta de IMPINJ_OCTANE"));
+    }
+
+    /** Crea/actualiza filas de antenas en BD según el conteo del hardware Impinj y reaplica settings. */
+    @PostMapping("/{id}/antennas/discover")
+    public ResponseEntity<?> discoverAntennas(@PathVariable String id) {
+        if (!readerRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        if (readerManager == null) {
+            return ResponseEntity.status(503).body(Map.of("error", "ReaderManager no disponible"));
+        }
+        try {
+            int n = readerManager.discoverAndSyncAntennas(id);
+            return ResponseEntity.ok(Map.of(
+                "message", "Antenas sincronizadas",
+                "readerId", id,
+                "physicalAntennaPorts", n));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("discoverAntennas {}: {}", id, e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
     }
 }

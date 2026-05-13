@@ -49,6 +49,13 @@
                     <input type="text" id="hostname" th:field="*{hostname}" required placeholder="ej: 192.168.1.100" />
                 </div>
                 <div class="form-group">
+                    <label for="brand">Marca del lector</label>
+                    <select id="brand" th:field="*{brand}">
+                        <option th:each="b : ${T(com.rfidgateway.model.ReaderBrand).values()}" th:value="${b}" th:text="${b}"></option>
+                    </select>
+                    <p class="hint">Solo <strong>IMPINJ_OCTANE</strong> conecta vía Octane. Tras cambiar marca, use Conectar de nuevo.</p>
+                </div>
+                <div class="form-group">
                     <label for="operationMode">Modo de operación</label>
                     <select id="operationMode" th:field="*{operationMode}">
                         <option th:each="m : ${T(com.rfidgateway.model.ReaderOperationMode).values()}" th:value="${m}" th:text="${m}"></option>

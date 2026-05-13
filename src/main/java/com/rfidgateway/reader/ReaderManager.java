@@ -3,6 +3,8 @@ package com.rfidgateway.reader;
 import com.impinj.octane.*;
 import com.rfidgateway.model.Antenna;
 import com.rfidgateway.model.Reader;
+import com.rfidgateway.model.ReaderBrand;
+import com.rfidgateway.model.ReaderHardwareInfo;
 import com.rfidgateway.model.ReaderOperationMode;
 import com.rfidgateway.repository.AntennaRepository;
 import com.rfidgateway.repository.ReaderRepository;
@@ -59,10 +61,97 @@ public class ReaderManager {
             .orElse(false);
     }
 
+    /** Solo lectores con marca Impinj Octane usan el SDK en este gateway. */
+    public boolean usesImpinjOctane(String readerId) {
+        return readerRepository.findById(readerId)
+            .map(r -> r.getBrand() == ReaderBrand.IMPINJ_OCTANE)
+            .orElse(false);
+    }
+
+    /**
+     * Capacidades del hardware vía {@link ImpinjReader#queryFeatureSet()} (lector conectado).
+     */
+    public Optional<ReaderHardwareInfo> queryHardwareCapabilities(String readerId) {
+        Optional<Reader> cfgOpt = readerRepository.findById(readerId);
+        if (cfgOpt.isEmpty() || cfgOpt.get().getBrand() != ReaderBrand.IMPINJ_OCTANE) {
+            return Optional.empty();
+        }
+        ImpinjReader reader = readers.get(readerId);
+        if (reader == null || !reader.isConnected()) {
+            return Optional.empty();
+        }
+        try {
+            FeatureSet f = reader.queryFeatureSet();
+            Reader cfg = cfgOpt.get();
+            return Optional.of(ReaderHardwareInfo.builder()
+                .readerId(readerId)
+                .brand(cfg.getBrand().name())
+                .antennaCount(Math.max(1, (int) f.getAntennaCount()))
+                .modelName(f.getModelName())
+                .modelNumber(String.valueOf(f.getModelNumber()))
+                .firmwareVersion(f.getFirmwareVersion())
+                .xArray(reader.isXArray())
+                .build());
+        } catch (OctaneSdkException e) {
+            log.warn("queryFeatureSet {}: {}", readerId, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Crea o actualiza filas {@link Antenna} para los puertos 1..N según el lector Impinj,
+     * y deshabilita puertos en BD mayores que N. Reaplica configuración al lector.
+     *
+     * @return número de puertos sincronizados (1..N)
+     */
+    public int discoverAndSyncAntennas(String readerId) throws Exception {
+        Reader cfg = readerRepository.findById(readerId)
+            .orElseThrow(() -> new IllegalArgumentException("Lector no encontrado"));
+        if (cfg.getBrand() != ReaderBrand.IMPINJ_OCTANE) {
+            throw new IllegalStateException("Detección de antenas solo está implementada para marca Impinj (Octane).");
+        }
+        ImpinjReader reader = readers.get(readerId);
+        if (reader == null || !reader.isConnected()) {
+            throw new IllegalStateException("El lector debe estar conectado. Use «Conectar» y espere estado Conectado.");
+        }
+        FeatureSet features = reader.queryFeatureSet();
+        int n = Math.max(1, (int) features.getAntennaCount());
+        for (int p = 1; p <= n; p++) {
+            short port = (short) p;
+            String aid = readerId + "-antenna-" + port;
+            Optional<Antenna> existing = antennaRepository.findByReaderIdAndPortNumber(readerId, port);
+            Antenna a;
+            if (existing.isPresent()) {
+                a = existing.get();
+                a.setEnabled(true);
+            } else {
+                a = new Antenna();
+                a.setId(aid);
+                a.setReaderId(readerId);
+                a.setName("Puerto " + port);
+                a.setPortNumber(port);
+                a.setEnabled(true);
+            }
+            antennaRepository.save(a);
+        }
+        for (Antenna ant : antennaRepository.findByReaderId(readerId)) {
+            if (ant.getPortNumber() != null && ant.getPortNumber() > n) {
+                ant.setEnabled(false);
+                antennaRepository.save(ant);
+            }
+        }
+        resetAntennas(readerId);
+        return n;
+    }
+
     /**
      * Slot de inventario: una antena, tiempo fijo, sin auto-stop por timeout de túnel.
      */
     public void runInventoryAntennaSlot(String readerId, short antennaPort, long dwellTimeMs) throws Exception {
+        if (!usesImpinjOctane(readerId)) {
+            log.warn("runInventoryAntennaSlot: lector {} no usa Impinj Octane, se omite", readerId);
+            return;
+        }
         ImpinjReader reader = readers.get(readerId);
         if (reader == null || !reader.isConnected()) {
             log.warn("runInventoryAntennaSlot: lector {} no conectado", readerId);
@@ -159,6 +248,15 @@ public class ReaderManager {
     public void connectReader(Reader config) {
         String readerId = config.getId();
         try {
+            if (config.getBrand() == null) {
+                config.setBrand(ReaderBrand.IMPINJ_OCTANE);
+            }
+            if (config.getBrand() != ReaderBrand.IMPINJ_OCTANE) {
+                disconnectReader(readerId);
+                updateReaderStatus(readerId, false, false);
+                throw new RuntimeException(
+                    "Marca " + config.getBrand() + ": este gateway aún no conecta ese fabricante. Use Impinj (Octane) o espere integración.");
+            }
             ImpinjReader reader = new ImpinjReader();
             reader.connect(config.getHostname());
 
@@ -191,6 +289,9 @@ public class ReaderManager {
             log.error("Error SDK al conectar lector {}: {}", readerId, e.getMessage());
             updateReaderStatus(readerId, false, false);
             throw new RuntimeException("Error al conectar lector: " + e.getMessage());
+        } catch (RuntimeException e) {
+            updateReaderStatus(readerId, false, false);
+            throw e;
         } catch (Exception e) {
             log.error("Error al conectar lector {}: {}", readerId, e.getMessage());
             updateReaderStatus(readerId, false, false);
@@ -199,6 +300,9 @@ public class ReaderManager {
     }
 
     private void configureReaderSettings(String readerId, Settings settings) throws OctaneSdkException {
+        if (!usesImpinjOctane(readerId)) {
+            return;
+        }
         List<Antenna> enabledAntennas = antennaRepository.findByReaderIdAndEnabledTrue(readerId);
         short[] ports;
         if (enabledAntennas.isEmpty()) {
@@ -334,6 +438,10 @@ public class ReaderManager {
     }
 
     public void resetAntennas(String readerId) {
+        if (!usesImpinjOctane(readerId)) {
+            log.warn("resetAntennas: lector {} no es Impinj Octane", readerId);
+            return;
+        }
         ImpinjReader reader = readers.get(readerId);
         if (reader == null || !reader.isConnected()) {
             log.warn("Lector {} no conectado, no se puede resetear antenas", readerId);

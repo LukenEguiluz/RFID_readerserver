@@ -15,5 +15,7 @@ public interface AntennaRepository extends JpaRepository<Antenna, String> {
 
     List<Antenna> findByReaderIdAndEnabledTrueOrderByPortNumberAsc(String readerId);
 
+    List<Antenna> findByReaderIdOrderByPortNumberAsc(String readerId);
+
     Optional<Antenna> findByReaderIdAndPortNumber(String readerId, Short portNumber);
 }
