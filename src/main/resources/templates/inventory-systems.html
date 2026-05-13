@@ -50,6 +50,7 @@
                 <td th:text="${s.globalCycleSeconds}">300</td>
                 <td th:text="${s.enabled}">false</td>
                 <td>
+                    <a th:href="@{/inventory-systems/{id}/epcs(id=${s.id})}" class="btn" style="background:#2b6cb0;">EPCs</a>
                     <a th:href="@{/inventory-systems/{id}/edit(id=${s.id})}" class="btn">Editar</a>
                     <form th:action="@{/inventory-systems/{id}/delete(id=${s.id})}" method="post" style="display:inline;" onsubmit="return confirm('¿Eliminar sistema y datos de EPC de este sistema?');">
                         <button type="submit" class="btn">Eliminar</button>

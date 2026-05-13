@@ -25,6 +25,7 @@
     <div class="header">
         <h1 th:text="${system.id != null} ? 'Editar sistema' : 'Nuevo sistema'">Sistema</h1>
         <a href="/inventory-systems" class="btn-secondary">Volver</a>
+        <a th:if="${system.id != null}" th:href="@{/inventory-systems/{id}/epcs(id=${system.id})}" class="btn-secondary" style="margin-left:8px;">Ver EPC en vivo</a>
     </div>
     <div class="form-box">
         <form th:action="${system.id != null} ? @{/inventory-systems/{id}/edit(id=${system.id})} : @{/inventory-systems}" method="post">

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'EPC — ' + ${systemName}">EPC inventario continuo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 960px; margin: 0 auto; }
+        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e2e8f0; }
+        th { color: #4a5568; font-weight: 600; }
+        .btn { display: inline-block; padding: 8px 16px; background: #718096; color: white; text-decoration: none; border-radius: 5px; font-size: 14px; margin-right: 8px; }
+        .btn:hover { background: #4a5568; }
+        .meta { font-size: 13px; color: #718096; margin-top: 8px; }
+        code { background: #edf2f7; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+        .err { color: #c53030; font-size: 13px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>EPC en inventario continuo</h1>
+        <p><strong th:text="${systemName}">Sistema</strong> · ID <code th:text="${systemId}">id</code></p>
+        <p class="meta">Solo EPC marcados como <em>presentes</em> en el ciclo actual. Actualización cada 2 s.</p>
+        <a href="/inventory-systems" class="btn">Lista sistemas</a>
+        <a th:href="@{/inventory-systems/{id}/edit(id=${systemId})}" class="btn">Editar sistema</a>
+    </div>
+    <div class="card">
+        <div id="status" class="meta">Cargando…</div>
+        <div id="err" class="err" style="display:none;"></div>
+        <table>
+            <thead>
+            <tr>
+                <th>EPC</th>
+                <th>Última vez</th>
+                <th>Lector</th>
+                <th>Antena</th>
+            </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+        </table>
+    </div>
+</div>
+<script th:inline="javascript">
+(function () {
+    var systemId = /*[[${systemId}]]*/ '';
+    var api = '/api/inventory-systems/' + encodeURIComponent(systemId) + '/epcs/current';
+    var statusEl = document.getElementById('status');
+    var errEl = document.getElementById('err');
+    var tbody = document.getElementById('rows');
+
+    function esc(s) {
+        if (s == null) return '';
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function tick() {
+        fetch(api, { credentials: 'same-origin' })
+            .then(function (r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function (list) {
+                errEl.style.display = 'none';
+                statusEl.textContent = 'Última actualización: ' + new Date().toLocaleTimeString() + ' · ' + list.length + ' EPC';
+                tbody.innerHTML = '';
+                list.forEach(function (row) {
+                    var tr = document.createElement('tr');
+                    tr.innerHTML =
+                        '<td><code>' + esc(row.epc) + '</code></td>' +
+                        '<td>' + esc(row.lastSeenAt) + '</td>' +
+                        '<td>' + esc(row.lastReaderId) + '</td>' +
+                        '<td>' + esc(row.lastAntennaPort) + '</td>';
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(function (e) {
+                errEl.style.display = 'block';
+                errEl.textContent = 'Error al cargar EPC: ' + e.message;
+                statusEl.textContent = 'Sin datos';
+            });
+    }
+    tick();
+    setInterval(tick, 2000);
+})();
+</script>
+</body>
+</html>

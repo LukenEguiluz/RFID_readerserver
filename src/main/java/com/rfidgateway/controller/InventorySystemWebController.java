@@ -1,19 +1,14 @@
 package com.rfidgateway.controller;
 
 import com.rfidgateway.inventory.InventoryOrchestrationService;
+import com.rfidgateway.inventory.InventorySystemCommandService;
 import com.rfidgateway.model.InventorySystem;
-import com.rfidgateway.model.InventorySystemReader;
-import com.rfidgateway.model.Reader;
-import com.rfidgateway.model.ReaderOperationMode;
-import com.rfidgateway.repository.EpcPresenceEventRepository;
-import com.rfidgateway.repository.InventorySystemEpcStateRepository;
 import com.rfidgateway.repository.InventorySystemReaderRepository;
 import com.rfidgateway.repository.InventorySystemRepository;
 import com.rfidgateway.repository.ReaderRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,9 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @Controller
@@ -42,10 +35,7 @@ public class InventorySystemWebController {
     private ReaderRepository readerRepository;
 
     @Autowired
-    private InventorySystemEpcStateRepository epcStateRepository;
-
-    @Autowired
-    private EpcPresenceEventRepository presenceEventRepository;
+    private InventorySystemCommandService inventorySystemCommandService;
 
     @Autowired
     private InventoryOrchestrationService inventoryOrchestrationService;
@@ -81,8 +71,21 @@ public class InventorySystemWebController {
             .orElse("redirect:/inventory-systems");
     }
 
+    /**
+     * Vista en vivo de EPC vistos en inventario continuo (poll a la API de solo lectura).
+     */
+    @GetMapping("/{id}/epcs")
+    public String liveEpcs(@PathVariable String id, Model model) {
+        return inventorySystemRepository.findById(id)
+            .map(s -> {
+                model.addAttribute("systemId", s.getId());
+                model.addAttribute("systemName", s.getName());
+                return "inventory-system-epcs";
+            })
+            .orElse("redirect:/inventory-systems");
+    }
+
     @PostMapping
-    @Transactional
     public String create(
         @RequestParam String id,
         @RequestParam String name,
@@ -103,13 +106,15 @@ public class InventorySystemWebController {
             return "redirect:/inventory-systems/new";
         }
         try {
-            InventorySystem s = new InventorySystem();
-            s.setId(sid);
-            s.setName(name != null ? name.trim() : sid);
-            s.setGlobalCycleSeconds(Math.max(30, globalCycleSeconds));
-            s.setEnabled(enabled);
-            inventorySystemRepository.save(s);
-            applyMembers(sid, memberReaderId, memberOrder, memberSlotSeconds);
+            inventorySystemCommandService.createSystem(
+                sid,
+                name,
+                globalCycleSeconds,
+                enabled,
+                memberReaderId,
+                memberOrder,
+                memberSlotSeconds
+            );
             inventoryOrchestrationService.reload();
             redirect.addFlashAttribute("success", "Sistema creado. Activa el sistema para iniciar ciclos.");
         } catch (Exception e) {
@@ -121,7 +126,6 @@ public class InventorySystemWebController {
     }
 
     @PostMapping("/{id}/edit")
-    @Transactional
     public String update(
         @PathVariable String id,
         @RequestParam String name,
@@ -133,13 +137,15 @@ public class InventorySystemWebController {
         RedirectAttributes redirect
     ) {
         try {
-            inventorySystemRepository.findById(id).ifPresent(s -> {
-                s.setName(name != null ? name.trim() : s.getName());
-                s.setGlobalCycleSeconds(Math.max(30, globalCycleSeconds));
-                s.setEnabled(enabled);
-                inventorySystemRepository.save(s);
-            });
-            applyMembers(id, memberReaderId, memberOrder, memberSlotSeconds);
+            inventorySystemCommandService.updateSystem(
+                id,
+                name,
+                globalCycleSeconds,
+                enabled,
+                memberReaderId,
+                memberOrder,
+                memberSlotSeconds
+            );
             inventoryOrchestrationService.reload();
             redirect.addFlashAttribute("success", "Sistema actualizado.");
         } catch (Exception e) {
@@ -150,21 +156,9 @@ public class InventorySystemWebController {
     }
 
     @PostMapping("/{id}/delete")
-    @Transactional
     public String delete(@PathVariable String id, RedirectAttributes redirect) {
         try {
-            memberRepository.findBySystem_IdOrderByOrderIndexAsc(id).forEach(m -> {
-                Reader r = m.getReader();
-                if (r != null) {
-                    r.setOperationMode(ReaderOperationMode.TUNNEL);
-                    r.setInventorySystemId(null);
-                    readerRepository.save(r);
-                }
-            });
-            memberRepository.deleteBySystem_Id(id);
-            epcStateRepository.deleteBySystemId(id);
-            presenceEventRepository.deleteBySystemId(id);
-            inventorySystemRepository.deleteById(id);
+            inventorySystemCommandService.deleteSystem(id);
             inventoryOrchestrationService.reload();
             redirect.addFlashAttribute("success", "Sistema eliminado.");
         } catch (Exception e) {
@@ -172,57 +166,5 @@ public class InventorySystemWebController {
             redirect.addFlashAttribute("error", "No se pudo eliminar.");
         }
         return "redirect:/inventory-systems";
-    }
-
-    private void applyMembers(
-        String systemId,
-        List<String> memberReaderId,
-        List<Integer> memberOrder,
-        List<Integer> memberSlotSeconds
-    ) {
-        memberRepository.deleteBySystem_Id(systemId);
-        InventorySystem system = inventorySystemRepository.findById(systemId).orElseThrow();
-
-        Set<String> assigned = new LinkedHashSet<>();
-        if (memberReaderId != null) {
-            for (int i = 0; i < memberReaderId.size(); i++) {
-                String rid = memberReaderId.get(i);
-                if (rid == null || rid.isBlank()) {
-                    continue;
-                }
-                rid = rid.trim();
-                if (!assigned.add(rid)) {
-                    continue;
-                }
-                Reader reader = readerRepository.findById(rid).orElse(null);
-                if (reader == null) {
-                    continue;
-                }
-                int ord = memberOrder != null && i < memberOrder.size() && memberOrder.get(i) != null
-                    ? memberOrder.get(i) : i;
-                int slot = memberSlotSeconds != null && i < memberSlotSeconds.size() && memberSlotSeconds.get(i) != null
-                    ? memberSlotSeconds.get(i) : 60;
-                slot = Math.max(5, slot);
-
-                reader.setOperationMode(ReaderOperationMode.CONTINUOUS);
-                reader.setInventorySystemId(systemId);
-                readerRepository.save(reader);
-
-                InventorySystemReader row = new InventorySystemReader();
-                row.setSystem(system);
-                row.setReader(reader);
-                row.setOrderIndex(ord);
-                row.setReaderSlotSeconds(slot);
-                memberRepository.save(row);
-            }
-        }
-
-        readerRepository.findAll().stream()
-            .filter(r -> systemId.equals(r.getInventorySystemId()) && !assigned.contains(r.getId()))
-            .forEach(r -> {
-                r.setOperationMode(ReaderOperationMode.TUNNEL);
-                r.setInventorySystemId(null);
-                readerRepository.save(r);
-            });
     }
 }

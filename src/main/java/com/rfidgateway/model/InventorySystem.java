@@ -20,7 +20,8 @@ public class InventorySystem {
     @Column(length = 64)
     private String id;
 
-    @Column(nullable = false, unique = true, length = 200)
+    /** Nombre visible; no es único globalmente (el ID del sistema sí lo es). */
+    @Column(nullable = false, length = 200)
     private String name;
 
     /**

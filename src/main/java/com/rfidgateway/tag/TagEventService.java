@@ -11,8 +11,6 @@ import com.rfidgateway.repository.TagEventRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -37,7 +35,6 @@ public class TagEventService {
     @Autowired(required = false)
     private RealtimeEventController realtimeEventController;
 
-    @Transactional
     public void processTagEvent(String readerId, String epc, Short antennaPort,
                                 Double rssi, Double phase) {
         try {
