@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${system.id != null} ? 'Editar sistema' : 'Nuevo sistema'">Sistema</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .form-box { background: white; padding: 24px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; }
+        input[type="text"], input[type="number"], select { width: 100%; max-width: 400px; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 6px; }
+        table.members { width: 100%; margin-top: 8px; font-size: 14px; }
+        table.members th, table.members td { padding: 8px; border-bottom: 1px solid #edf2f7; text-align: left; }
+        .btn { display: inline-block; padding: 10px 18px; background: #48bb78; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; font-size: 14px; margin-right: 10px; margin-top: 12px; }
+        .btn-secondary { background: #718096; color: white; text-decoration: none; padding: 10px 18px; border-radius: 5px; display: inline-block; margin-top: 12px; }
+        .hint { font-size: 12px; color: #718096; margin-top: 4px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1 th:text="${system.id != null} ? 'Editar sistema' : 'Nuevo sistema'">Sistema</h1>
+        <a href="/inventory-systems" class="btn-secondary">Volver</a>
+    </div>
+    <div class="form-box">
+        <form th:action="${system.id != null} ? @{/inventory-systems/{id}/edit(id=${system.id})} : @{/inventory-systems}" method="post">
+            <div class="form-group" th:if="${system.id == null}">
+                <label for="id">ID sistema *</label>
+                <input type="text" id="id" name="id" required placeholder="ej: planta-1"/>
+            </div>
+            <div class="form-group" th:if="${system.id != null}">
+                <label>ID</label>
+                <input type="text" th:value="${system.id}" readonly style="background:#f7fafc;"/>
+            </div>
+            <div class="form-group">
+                <label for="name">Nombre *</label>
+                <input type="text" id="name" name="name" required th:value="${system.name}"/>
+            </div>
+            <div class="form-group">
+                <label for="globalCycleSeconds">Ciclo global (segundos) *</label>
+                <input type="number" id="globalCycleSeconds" name="globalCycleSeconds" min="30" required th:value="${system.globalCycleSeconds != null ? system.globalCycleSeconds : 300}"/>
+                <p class="hint">Tiempo entre inicios de ciclo completo (suma de trabajo + espera hasta el siguiente ciclo).</p>
+            </div>
+            <div class="form-group">
+                <label><input type="checkbox" name="enabled" value="true" th:checked="${system.enabled}"/> Sistema activo (orquestación)</label>
+            </div>
+            <h3 style="margin:20px 0 8px;">Lectores en el ciclo (hasta 6 filas)</h3>
+            <p class="hint">Orden = secuencia en el ciclo. Segundos lector = tiempo total del lector en el ciclo (se divide entre sus antenas habilitadas).</p>
+            <table class="members">
+                <thead>
+                <tr><th>Lector</th><th>Orden</th><th>Seg. lector</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="i : ${#numbers.sequence(0, 5)}">
+                    <td>
+                        <select name="memberReaderId">
+                            <option value="">—</option>
+                            <option th:each="r : ${allReaders}" th:value="${r.id}" th:text="${r.name + ' (' + r.id + ')'}"
+                                    th:selected="${members != null && members.size() > i && members.get(i).reader != null && members.get(i).reader.id == r.id}"></option>
+                        </select>
+                    </td>
+                    <td><input type="number" name="memberOrder" min="0" style="width:80px"
+                               th:value="${members != null && members.size() > i} ? ${members.get(i).orderIndex} : ${i}"/></td>
+                    <td><input type="number" name="memberSlotSeconds" min="5" style="width:100px"
+                               th:value="${members != null && members.size() > i} ? ${members.get(i).readerSlotSeconds} : 60"/></td>
+                </tr>
+                </tbody>
+            </table>
+            <button type="submit" class="btn">Guardar</button>
+            <a href="/inventory-systems" class="btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+</body>
+</html>

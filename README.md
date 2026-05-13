@@ -25,19 +25,39 @@ Gateway centralizado desarrollado en Spring Boot para controlar y gestionar múl
 
 ### Opción 1: Docker Compose (Recomendado)
 
+#### 1a — Un solo archivo (`docker-compose.yml`)
+
 1. **Clonar o copiar el proyecto**
 
-2. **Construir la aplicación**:
+2. **Construir la aplicación** (opcional si solo usas la imagen construida por Compose):
 ```bash
 mvn clean package
 ```
 
-3. **Iniciar con Docker Compose**:
+3. **Iniciar**:
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
-El gateway estará disponible en `http://localhost:8080`
+El gateway estará en `http://localhost:38080` (mapeo por defecto del host; dentro del contenedor sigue en 8080). Para usar el puerto 8080 en el host: `export GATEWAY_HTTP_PORT=8080` antes de `docker compose up`. Los datos de PostgreSQL van al volumen nombrado `rfid_tunnel_postgres_data` (persistente salvo que uses `docker compose down -v`).
+
+#### 1b — Base y gateway por separado (integration bundle)
+
+Orquestado por `./deploy.sh`: Postgres en `docker-compose.db.yml`, gateway en `docker-compose.app.yml`, misma red Docker y volumen de datos **independiente** del ciclo de vida del contenedor del gateway. Tras cambiar código o imagen:
+
+```bash
+./deploy.sh update-app
+```
+
+Interfaz y API por defecto: **http://localhost:38080** (misma base de URL en navegador, webapp y `curl` contra el host).
+
+Instalar/actualizar esos archivos desde `integration-bundle/` en la raíz del repo:
+
+```bash
+bash integration-bundle/COPIAR_AL_REPO.sh
+```
+
+Más detalle: `integration-bundle/README.md` y visión del sistema: `docs/SOUL.md`.
 
 ### Opción 2: Instalación Manual
 

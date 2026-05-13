@@ -1,0 +1,31 @@
+Integración en el repo RFID_readerserver (y RFID_tunnel)
+========================================================
+
+Los archivos de despliegue viven en `integration-bundle/`. Para volcarlos en la raíz del repo:
+
+  bash integration-bundle/COPIAR_AL_REPO.sh
+
+(Por defecto la raíz es la carpeta padre de `integration-bundle/`. Con otro repo:  
+  `bash integration-bundle/COPIAR_AL_REPO.sh /ruta/al/repo`  
+Si el repo es de root: `sudo bash ...`.)
+
+Alternativa si el bundle está en tu home:
+
+  sudo bash /home/dohealth/RFID_tunnel_integration_bundle/COPIAR_AL_REPO.sh /home/dohealth/RFID_readerserver
+
+  bash /home/dohealth/RFID_tunnel_integration_bundle/COPIAR_AL_REPO.sh /home/dohealth/RFID_readerserver
+
+Qué se añade al repo
+--------------------
+- docker-compose.db.yml   Postgres + red rfid_tunnel_net + volumen nombrado
+- docker-compose.app.yml  Solo gateway (usa la misma red externa)
+- deploy.sh               Orquesta DB + app (up, update-app, stop-app, stop-all, logs…)
+- scripts/instalar-en-proyecto.sh  Copia los tres archivos anteriores a otra ruta
+- docs/SOUL.md            Visión del sistema (contenido de docs-SOUL.md)
+
+Uso rápido (desde la raíz del repo, tras copiar)
+-----------------------------------------------
+  ./deploy.sh up
+  ./deploy.sh update-app   # tras actualizar el programa; no borra la base
+
+El docker-compose.yml monolítico del repo sigue siendo válido para un solo `docker compose up`.

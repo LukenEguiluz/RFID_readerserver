@@ -38,11 +38,11 @@ docker-compose ps
 echo.
 echo ✅ Gateway iniciado!
 echo.
-echo 📍 URLs disponibles:
-echo    - API REST: http://localhost:8080/api
-echo    - Estado: http://localhost:8080/api/status
-echo    - Health: http://localhost:8080/api/health
-echo    - WebSocket: ws://localhost:8080/ws/events
+echo 📍 URLs disponibles (puerto host 38080 por defecto; export GATEWAY_HTTP_PORT=8080 si prefieres 8080):
+echo    - API REST: http://localhost:38080/api
+echo    - Estado: http://localhost:38080/api/status
+echo    - Health: http://localhost:38080/api/health
+echo    - WebSocket: ws://localhost:38080/ws/events
 echo.
 echo 📝 Ver logs:
 echo    docker-compose logs -f gateway
