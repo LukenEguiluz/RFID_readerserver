@@ -1,477 +1,244 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestionar Lectores - doHealth RFID Gateway</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .header h1 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #dc2626;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            margin: 5px;
-        }
-        
-        .btn:hover {
-            background: #b91c1c;
-        }
-        
-        .btn-success {
-            background: #48bb78;
-        }
-        
-        .btn-danger {
-            background: #f56565;
-        }
-        
-        .btn-warning {
-            background: #ed8936;
-        }
-        
-        .btn-small {
-            padding: 5px 10px;
-            font-size: 12px;
-        }
-        
-        table {
-            width: 100%;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        th {
-            background: #dc2626;
-            color: white;
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-        }
-        
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        tr:hover {
-            background: #f7fafc;
-        }
-        
-        .status {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .status-connected {
-            background: #c6f6d5;
-            color: #22543d;
-        }
-        
-        .status-disconnected {
-            background: #fed7d7;
-            color: #742a2a;
-        }
-        
-        .status-reading {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .alert {
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-        }
-        
-        .alert-success {
-            background: #c6f6d5;
-            color: #22543d;
-            border: 1px solid #9ae6b4;
-        }
-        
-        .alert-error {
-            background: #fed7d7;
-            color: #742a2a;
-            border: 1px solid #fc8181;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-        }
-        
-        .empty-state h3 {
-            margin-bottom: 10px;
-        }
-        
-        .api-result {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            max-width: 400px;
-        }
-        
-        .api-result-success {
-            background: #c6f6d5;
-            color: #22543d;
-            border: 1px solid #9ae6b4;
-        }
-        
-        .api-result-error {
-            background: #fed7d7;
-            color: #742a2a;
-            border: 1px solid #fc8181;
-        }
-        
-        .api-result-info {
-            background: #bee3f8;
-            color: #2c5282;
-            border: 1px solid #90cdf4;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        
-        .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 20px;
-            border-radius: 10px;
-            width: 80%;
-            max-width: 600px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        
-        .close:hover {
-            color: #000;
-        }
-        
-        pre {
-            background: #f7fafc;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-    </style>
-</head>
-<body>
-    <!-- Modal para mostrar resultados de APIs -->
-    <div id="apiModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="modalTitle">Resultado de API</h2>
-            <div id="modalBody"></div>
+<html xmlns:th="http://www.thymeleaf.org" lang="es" class="light">
+<head th:replace="~{fragments/dh-head :: dhHead('Lectores')}"></head>
+<body class="min-h-screen bg-background text-on-background">
+<aside th:replace="~{fragments/dh-nav :: dhSidebar(activeNav='readers')}"></aside>
+<main class="ml-[260px] flex min-h-screen flex-col bg-background">
+    <header th:replace="~{fragments/dh-nav :: dhTopbar('Gestión de lectores')}"></header>
+    <div class="custom-scrollbar flex-1 space-y-lg overflow-y-auto p-margin-desktop max-w-max-width">
+        <div class="flex flex-wrap items-center gap-sm">
+            <a th:href="@{/}" class="inline-flex items-center gap-xs rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm font-label-md text-label-md text-on-surface hover:bg-surface-container-low">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span> Inicio
+            </a>
+            <a th:href="@{/tags}" class="inline-flex items-center gap-xs rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm font-label-md text-label-md text-primary hover:bg-surface-container-low">
+                <span class="material-symbols-outlined text-[18px]">label</span> Tags
+            </a>
+            <a th:href="@{/readers/new}" class="inline-flex items-center gap-xs rounded-lg bg-primary px-md py-sm font-bold text-on-primary shadow-sm hover:bg-primary-container">
+                <span class="material-symbols-outlined text-[18px]">add</span> Nuevo lector
+            </a>
+            <a th:href="@{/groups}" class="inline-flex items-center gap-xs rounded-lg bg-secondary-container px-md py-sm font-bold text-on-secondary-container hover:bg-secondary-fixed">
+                <span class="material-symbols-outlined text-[18px]">group</span> Grupos
+            </a>
+            <a th:href="@{/groups/new}" class="inline-flex items-center gap-xs rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm font-label-md text-primary hover:bg-surface-container-low">
+                <span class="material-symbols-outlined text-[18px]">group_add</span> Crear grupo
+            </a>
+            <a th:href="@{/api-docs}" class="inline-flex items-center gap-xs rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm font-label-md text-primary hover:bg-surface-container-low">
+                <span class="material-symbols-outlined text-[18px]">menu_book</span> APIs
+            </a>
         </div>
-    </div>
-    <div class="container">
-        <div class="header">
-            <h1>📋 Gestionar Lectores</h1>
-            <a href="/" class="btn">← Volver</a>
-            <a href="/tags" class="btn">🏷️ Ver Tags</a>
-            <a href="/readers/new" class="btn btn-success">➕ Agregar Lector</a>
-            <a href="/groups" class="btn" style="background: #4299e1;">👥 Ver Grupos</a>
-            <a href="/groups/new" class="btn" style="background: #4299e1;">➕ Crear Grupo</a>
-            <a href="/api-docs" class="btn">📚 Ver APIs</a>
+
+        <div th:if="${success}" class="rounded-xl border border-outline-variant bg-surface-container-low px-lg py-md text-body-md text-on-secondary-fixed" th:text="${success}"></div>
+        <div th:if="${error}" class="rounded-xl border border-error bg-error-container px-lg py-md text-body-md text-on-error-container" th:text="${error}"></div>
+
+        <div id="apiModal" class="dh-modal-overlay">
+            <div class="dh-modal-box p-lg">
+                <div class="mb-md flex items-start justify-between gap-md border-b border-outline-variant pb-md">
+                    <h2 id="modalTitle" class="font-headline-md text-headline-md text-on-background">Resultado</h2>
+                    <button type="button" class="rounded p-1 text-on-surface-variant hover:bg-surface-container-low" onclick="closeModal()" aria-label="Cerrar">&times;</button>
+                </div>
+                <div id="modalBody" class="text-body-md text-on-surface"></div>
+            </div>
         </div>
-        
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-        
-        <div th:if="${readers != null and !readers.empty}">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Hostname/IP</th>
-                        <th>Marca</th>
-                        <th>Estado</th>
-                        <th>Habilitado</th>
-                        <th>Acciones</th>
+
+        <section th:if="${readers != null and !readers.empty}" class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[960px] border-collapse text-left text-body-md">
+                    <thead>
+                    <tr class="border-b border-outline-variant bg-inverse-surface text-surface-bright">
+                        <th class="px-lg py-md font-label-md text-label-md uppercase tracking-wider">ID</th>
+                        <th class="px-lg py-md font-label-md text-label-md uppercase tracking-wider">Nombre</th>
+                        <th class="px-lg py-md font-label-md text-label-md uppercase tracking-wider">Hostname/IP</th>
+                        <th class="px-lg py-md font-label-md text-label-md uppercase tracking-wider">Marca</th>
+                        <th class="px-lg py-md font-label-md text-label-md uppercase tracking-wider">Estado</th>
+                        <th class="px-lg py-md font-label-md text-label-md uppercase tracking-wider">Activo</th>
+                        <th class="px-lg py-md text-right font-label-md text-label-md uppercase tracking-wider">Acciones</th>
                     </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="reader : ${readers}">
-                        <td th:text="${reader.id}"></td>
-                        <td th:text="${reader.name}"></td>
-                        <td th:text="${reader.hostname}"></td>
-                        <td th:text="${reader.brand != null ? reader.brand.name() : 'IMPINJ_OCTANE'}">IMPINJ</td>
-                        <td>
-                            <span th:if="${reader.isConnected != null and reader.isConnected}" 
-                                  class="status status-connected">Conectado</span>
-                            <span th:unless="${reader.isConnected != null and reader.isConnected}" 
-                                  class="status status-disconnected">Desconectado</span>
-                            <span th:if="${reader.isReading != null and reader.isReading}" 
-                                  class="status status-reading">Leyendo</span>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant">
+                    <tr th:each="reader : ${readers}" class="transition-colors hover:bg-surface-container-low">
+                        <td class="px-lg py-md font-code-md text-code-md font-bold text-primary" th:text="${reader.id}"></td>
+                        <td class="px-lg py-md font-title-md text-title-md text-on-surface" th:text="${reader.name}"></td>
+                        <td class="px-lg py-md text-on-surface-variant" th:text="${reader.hostname}"></td>
+                        <td class="px-lg py-md text-on-surface-variant" th:text="${reader.brand != null ? reader.brand.name() : 'IMPINJ_OCTANE'}"></td>
+                        <td class="px-lg py-md">
+                            <span th:if="${reader.isConnected != null and reader.isConnected}"
+                                  class="mr-1 inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-sm py-0.5 text-label-md font-bold uppercase text-green-800">Conectado</span>
+                            <span th:unless="${reader.isConnected != null and reader.isConnected}"
+                                  class="mr-1 inline-flex items-center gap-1 rounded-full border border-outline-variant bg-surface-container-high px-sm py-0.5 text-label-md font-bold uppercase text-secondary">Desconectado</span>
+                            <span th:if="${reader.isReading != null and reader.isReading}"
+                                  class="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary-fixed px-sm py-0.5 text-label-md font-bold uppercase text-on-primary-fixed">Leyendo</span>
                         </td>
-                        <td>
-                            <span th:if="${reader.enabled}" style="color: #48bb78;">✓</span>
-                            <span th:unless="${reader.enabled}" style="color: #f56565;">✗</span>
+                        <td class="px-lg py-md">
+                            <span th:if="${reader.enabled}" class="font-bold text-[#059669]">✓</span>
+                            <span th:unless="${reader.enabled}" class="font-bold text-error">✗</span>
                         </td>
-                        <td>
-                            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-                                <a th:href="@{/readers/{id}/antennas(id=${reader.id})}" 
-                                   class="btn btn-small" style="background: #2b6cb0;">📡 Antenas</a>
-                                <a th:href="@{/readers/{id}/edit(id=${reader.id})}" 
-                                   class="btn btn-small">✏️ Editar</a>
-                                <form th:action="@{/readers/{id}/connect(id=${reader.id})}" 
-                                      method="post" style="display: inline;">
-                                    <button type="submit" class="btn btn-small btn-success">🔌 Conectar</button>
+                        <td class="px-lg py-md text-right">
+                            <div class="flex flex-wrap justify-end gap-xs">
+                                <a th:href="@{/readers/{id}/antennas(id=${reader.id})}"
+                                   class="inline-flex items-center gap-0.5 rounded border border-primary/25 bg-primary-container/10 px-sm py-xs text-label-md font-label-md text-primary hover:bg-primary-container/20">
+                                    <span class="material-symbols-outlined text-[16px]">antenna</span> Antenas
+                                </a>
+                                <a th:href="@{/readers/{id}/edit(id=${reader.id})}"
+                                   class="inline-flex items-center gap-0.5 rounded border border-outline-variant px-sm py-xs text-label-md text-on-surface hover:bg-surface-container-high">
+                                    <span class="material-symbols-outlined text-[16px]">edit</span> Editar
+                                </a>
+                                <form th:action="@{/readers/{id}/connect(id=${reader.id})}" method="post" class="inline">
+                                    <button type="submit" class="inline-flex items-center gap-0.5 rounded bg-[#059669] px-sm py-xs text-label-md font-bold text-white hover:opacity-90">Conectar</button>
                                 </form>
-                                <form th:action="@{/readers/{id}/disconnect(id=${reader.id})}" 
-                                      method="post" style="display: inline;">
-                                    <button type="submit" class="btn btn-small btn-warning">🔌 Desconectar</button>
+                                <form th:action="@{/readers/{id}/disconnect(id=${reader.id})}" method="post" class="inline">
+                                    <button type="submit" class="inline-flex items-center gap-0.5 rounded bg-secondary px-sm py-xs text-label-md font-bold text-on-secondary hover:opacity-90">Desconectar</button>
                                 </form>
-                                <button type="button" 
-                                        class="btn btn-small btn-api-action" 
-                                        style="background: #4299e1;"
-                                        th:data-reader-id="${reader.id}"
-                                        data-action="reset">
-                                    🔄 Reset
-                                </button>
-                                <button type="button" 
-                                        class="btn btn-small btn-api-action" 
-                                        style="background: #9f7aea;"
-                                        th:data-reader-id="${reader.id}"
-                                        data-action="reboot">
-                                    🔁 Reboot
-                                </button>
-                                <button type="button" 
-                                        class="btn btn-small btn-api-action" 
-                                        style="background: #38b2ac;"
-                                        th:data-reader-id="${reader.id}"
-                                        data-action="resetAntennas">
-                                    📡 Reset Antenas
-                                </button>
-                                <button type="button" 
-                                        class="btn btn-small btn-status-action" 
-                                        style="background: #718096;"
-                                        th:data-reader-id="${reader.id}">
-                                    📊 Status
-                                </button>
-                                <form th:action="@{/readers/{id}/delete(id=${reader.id})}" 
-                                      method="post" style="display: inline;"
+                                <button type="button" class="btn-api-action inline-flex items-center gap-0.5 rounded border border-outline-variant px-sm py-xs text-label-md text-primary hover:bg-surface-container-low"
+                                        th:data-reader-id="${reader.id}" data-action="reset">Reset</button>
+                                <button type="button" class="btn-api-action inline-flex items-center gap-0.5 rounded border border-outline-variant px-sm py-xs text-label-md text-tertiary hover:bg-surface-container-low"
+                                        th:data-reader-id="${reader.id}" data-action="reboot">Reboot</button>
+                                <button type="button" class="btn-api-action inline-flex items-center gap-0.5 rounded border border-outline-variant px-sm py-xs text-label-md text-on-surface-variant hover:bg-surface-container-low"
+                                        th:data-reader-id="${reader.id}" data-action="resetAntennas">Reset antenas</button>
+                                <button type="button" class="btn-status-action inline-flex items-center gap-0.5 rounded border border-outline-variant px-sm py-xs text-label-md text-on-surface-variant hover:bg-surface-container-low"
+                                        th:data-reader-id="${reader.id}">Status</button>
+                                <form th:action="@{/readers/{id}/delete(id=${reader.id})}" method="post" class="inline"
                                       onsubmit="return confirm('¿Estás seguro de eliminar este lector?');">
-                                    <button type="submit" class="btn btn-small btn-danger">🗑️ Eliminar</button>
+                                    <button type="submit" class="inline-flex items-center gap-0.5 rounded border border-error/40 px-sm py-xs text-label-md font-bold text-error hover:bg-error-container">Eliminar</button>
                                 </form>
                             </div>
                         </td>
                     </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <div style="margin-top: 40px;">
-            <h2 style="color: #333; margin-bottom: 20px;">👥 Grupos de Lectores</h2>
-            
-            <div th:if="${groups != null and !groups.empty}">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th>Lectores</th>
-                            <th>Conectados</th>
-                            <th>Habilitado</th>
-                            <th>Acciones</th>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="mt-xl space-y-md">
+            <h2 class="font-headline-md text-headline-md text-on-background">Grupos de lectores</h2>
+            <div th:if="${groups != null and !groups.empty}" class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[800px] border-collapse text-left text-body-md">
+                        <thead>
+                        <tr class="border-b border-outline-variant bg-inverse-surface text-surface-bright">
+                            <th class="px-lg py-md font-label-md text-label-md uppercase tracking-wider">ID</th>
+                            <th class="px-lg py-md font-label-md text-label-md uppercase tracking-wider">Nombre</th>
+                            <th class="px-lg py-md font-label-md text-label-md uppercase tracking-wider">Descripción</th>
+                            <th class="px-lg py-md font-label-md text-label-md uppercase tracking-wider">Lectores</th>
+                            <th class="px-lg py-md font-label-md text-label-md uppercase tracking-wider">Conectados</th>
+                            <th class="px-lg py-md font-label-md text-label-md uppercase tracking-wider">Activo</th>
+                            <th class="px-lg py-md text-right font-label-md text-label-md uppercase tracking-wider">Acciones</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="group : ${groups}">
-                            <td th:text="${group.id}"></td>
-                            <td th:text="${group.name}"></td>
-                            <td th:text="${group.description != null ? group.description : '-'}"></td>
-                            <td>
-                                <span th:text="${group.readers != null ? group.readers.size() : 0}"></span>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant">
+                        <tr th:each="group : ${groups}" class="transition-colors hover:bg-surface-container-low">
+                            <td class="px-lg py-md font-code-md text-primary" th:text="${group.id}"></td>
+                            <td class="px-lg py-md font-title-md text-on-surface" th:text="${group.name}"></td>
+                            <td class="px-lg py-md text-on-surface-variant" th:text="${group.description != null ? group.description : '-'}"></td>
+                            <td class="px-lg py-md" th:text="${group.readers != null ? group.readers.size() : 0}"></td>
+                            <td class="px-lg py-md" th:text="${group.connectedReaders != null ? group.connectedReaders.size() : 0}"></td>
+                            <td class="px-lg py-md">
+                                <span th:if="${group.enabled}" class="font-bold text-[#059669]">✓</span>
+                                <span th:unless="${group.enabled}" class="font-bold text-error">✗</span>
                             </td>
-                            <td>
-                                <span th:text="${group.connectedReaders != null ? group.connectedReaders.size() : 0}"></span>
-                            </td>
-                            <td>
-                                <span th:if="${group.enabled}" style="color: #48bb78;">✓</span>
-                                <span th:unless="${group.enabled}" style="color: #f56565;">✗</span>
-                            </td>
-                            <td>
-                                <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-                                    <a th:href="@{/groups/{id}/edit(id=${group.id})}" 
-                                       class="btn btn-small">✏️ Editar</a>
-                                    <form th:action="@{/groups/{id}/delete(id=${group.id})}" 
-                                          method="post" style="display: inline;"
+                            <td class="px-lg py-md text-right">
+                                <div class="flex flex-wrap justify-end gap-xs">
+                                    <a th:href="@{/groups/{id}/edit(id=${group.id})}"
+                                       class="inline-flex items-center rounded border border-outline-variant px-sm py-xs text-label-md text-primary hover:bg-surface-container-low">Editar</a>
+                                    <form th:action="@{/groups/{id}/delete(id=${group.id})}" method="post" class="inline"
                                           onsubmit="return confirm('¿Estás seguro de eliminar este grupo?');">
-                                        <button type="submit" class="btn btn-small btn-danger">🗑️ Eliminar</button>
+                                        <button type="submit" class="inline-flex items-center rounded border border-error/40 px-sm py-xs text-label-md font-bold text-error hover:bg-error-container">Eliminar</button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            
-            <div th:if="${groups == null or groups.empty}" class="empty-state">
-                <h3>No hay grupos configurados</h3>
-                <p>Los grupos permiten controlar múltiples lectores simultáneamente</p>
-                <a href="/groups/new" class="btn btn-success" style="margin-top: 20px;">➕ Crear Primer Grupo</a>
+            <div th:if="${groups == null or groups.empty}" class="rounded-xl border border-dashed border-outline-variant bg-surface-container-low px-lg py-xl text-center">
+                <h3 class="font-title-md text-title-md text-on-surface">No hay grupos</h3>
+                <p class="mt-sm text-body-md text-on-surface-variant">Los grupos permiten controlar varios lectores a la vez.</p>
+                <a th:href="@{/groups/new}" class="mt-md inline-flex items-center gap-sm rounded-lg bg-primary px-lg py-sm font-bold text-on-primary">Crear grupo</a>
             </div>
-        </div>
-        
-        <div th:if="${readers == null or readers.empty}" class="empty-state">
-            <h3>No hay lectores configurados</h3>
-            <p>Agrega tu primer lector para comenzar</p>
-            <a href="/readers/new" class="btn btn-success" style="margin-top: 20px;">➕ Agregar Lector</a>
+        </section>
+
+        <div th:if="${readers == null or readers.empty}" class="rounded-xl border border-dashed border-outline-variant bg-surface-container-low px-lg py-xl text-center">
+            <h3 class="font-title-md text-title-md text-on-surface">No hay lectores</h3>
+            <p class="mt-sm text-body-md text-on-surface-variant">Añada el primer lector para comenzar.</p>
+            <a th:href="@{/readers/new}" class="mt-md inline-flex items-center gap-sm rounded-lg bg-primary px-lg py-sm font-bold text-on-primary">Nuevo lector</a>
         </div>
     </div>
-    
-    <script>
-        // Configurar event listeners para los botones
-        document.addEventListener('DOMContentLoaded', function() {
-            // Botones de API (reset, reboot, resetAntennas)
-            document.querySelectorAll('.btn-api-action').forEach(function(button) {
-                button.addEventListener('click', function() {
-                    const readerId = this.getAttribute('data-reader-id');
-                    const action = this.getAttribute('data-action');
-                    callApi(readerId, action);
-                });
-            });
-            
-            // Botones de status
-            document.querySelectorAll('.btn-status-action').forEach(function(button) {
-                button.addEventListener('click', function() {
-                    const readerId = this.getAttribute('data-reader-id');
-                    getStatus(readerId);
-                });
+</main>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.btn-api-action').forEach(function(button) {
+            button.addEventListener('click', function() {
+                callApi(this.getAttribute('data-reader-id'), this.getAttribute('data-action'));
             });
         });
-        
-        function callApi(readerId, action) {
-            const endpoints = {
-                'reset': '/api/readers/' + readerId + '/reset',
-                'reboot': '/api/readers/' + readerId + '/reboot',
-                'resetAntennas': '/api/readers/' + readerId + '/antennas/reset'
-            };
-            
-            const actionNames = {
-                'reset': 'Reset de Conexión',
-                'reboot': 'Reboot Completo',
-                'resetAntennas': 'Reset de Antenas'
-            };
-            
-            const endpoint = endpoints[action];
-            if (!endpoint) {
-                showModal('Error', 'Acción no válida');
-                return;
-            }
-            
-            showModal(actionNames[action], 'Ejecutando...');
-            
-            fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                showModal(actionNames[action] + ' - Éxito', JSON.stringify(data, null, 2));
-            })
-            .catch(error => {
-                showModal(actionNames[action] + ' - Error', 'Error: ' + error.message);
+        document.querySelectorAll('.btn-status-action').forEach(function(button) {
+            button.addEventListener('click', function() {
+                getStatus(this.getAttribute('data-reader-id'));
             });
+        });
+    });
+
+    function callApi(readerId, action) {
+        const endpoints = {
+            'reset': '/api/readers/' + readerId + '/reset',
+            'reboot': '/api/readers/' + readerId + '/reboot',
+            'resetAntennas': '/api/readers/' + readerId + '/antennas/reset'
+        };
+        const actionNames = {
+            'reset': 'Reset de conexión',
+            'reboot': 'Reboot',
+            'resetAntennas': 'Reset de antenas'
+        };
+        const endpoint = endpoints[action];
+        if (!endpoint) {
+            showModal('Error', 'Acción no válida');
+            return;
         }
-        
-        function getStatus(readerId) {
-            showModal('Estado del Lector', 'Cargando...');
-            
-            fetch('/api/readers/' + readerId + '/status')
-            .then(response => response.json())
-            .then(data => {
-                showModal('Estado del Lector', JSON.stringify(data, null, 2));
+        showModal(actionNames[action], 'Ejecutando…');
+        fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                showModal(actionNames[action] + ' — OK', '<pre class="mt-md overflow-auto rounded bg-surface-container-low p-md font-code-md text-code-md text-on-surface">' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre>');
             })
-            .catch(error => {
+            .catch(function(error) {
+                showModal(actionNames[action] + ' — error', 'Error: ' + error.message);
+            });
+    }
+
+    function escapeHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function getStatus(readerId) {
+        showModal('Estado del lector', 'Cargando…');
+        fetch('/api/readers/' + readerId + '/status')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                showModal('Estado del lector', '<pre class="mt-md overflow-auto rounded bg-surface-container-low p-md font-code-md text-code-md text-on-surface">' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre>');
+            })
+            .catch(function(error) {
                 showModal('Error', 'Error al obtener estado: ' + error.message);
             });
+    }
+
+    function showModal(title, content) {
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalBody').innerHTML = typeof content === 'string' && content.indexOf('<') === 0 ? content : '<pre class="mt-md overflow-auto rounded bg-surface-container-low p-md font-code-md text-code-md">' + escapeHtml(String(content)) + '</pre>';
+        document.getElementById('apiModal').classList.add('dh-open');
+    }
+
+    function closeModal() {
+        document.getElementById('apiModal').classList.remove('dh-open');
+    }
+
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('apiModal');
+        if (event.target === modal) {
+            closeModal();
         }
-        
-        function showModal(title, content) {
-            document.getElementById('modalTitle').textContent = title;
-            document.getElementById('modalBody').innerHTML = '<pre>' + content + '</pre>';
-            document.getElementById('apiModal').style.display = 'block';
-        }
-        
-        function closeModal() {
-            document.getElementById('apiModal').style.display = 'none';
-        }
-        
-        // Cerrar modal al hacer clic fuera
-        window.onclick = function(event) {
-            const modal = document.getElementById('apiModal');
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-    </script>
+    });
+</script>
 </body>
 </html>
-
-
-

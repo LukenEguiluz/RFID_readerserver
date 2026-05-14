@@ -1,219 +1,194 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Antenas del lector - doHealth RFID Gateway</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
-        .container { max-width: 960px; margin: 0 auto; }
-        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .box { background: white; padding: 24px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .form-group { margin-bottom: 14px; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; }
-        input[type="text"], input[type="number"], select { width: 100%; max-width: 320px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; }
-        select.wide { max-width: 100%; }
-        .btn { display: inline-block; padding: 10px 18px; background: #dc2626; color: white; text-decoration: none; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; margin: 4px 8px 4px 0; }
-        .btn:hover { background: #b91c1c; }
-        .btn-secondary { background: #718096; }
-        .btn-success { background: #48bb78; }
-        .btn-info { background: #3182ce; }
-        .alert-success { background: #c6f6d5; color: #22543d; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
-        .alert-error { background: #fed7d7; color: #742a2a; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
-        th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-        th { background: #edf2f7; }
-        .hint { font-size: 12px; color: #718096; margin-top: 6px; }
-        dl { display: grid; grid-template-columns: 180px 1fr; gap: 6px 12px; font-size: 14px; }
-        dt { color: #718096; }
-        dd { font-weight: 500; }
-        details { margin-top: 12px; }
-        summary { cursor: pointer; color: #2b6cb0; font-weight: 600; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-        .badge-ok { background: #c6f6d5; color: #22543d; }
-        .badge-warn { background: #feebc8; color: #7b341e; }
-        .grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; align-items: end; }
-        .mini { font-size: 12px; max-width: 140px; }
-    </style>
-</head>
-<body>
-<div class="container">
-    <div class="header">
-        <h1>📡 Antenas</h1>
-        <p th:text="${reader.name} + ' (' + ${reader.id} + ')'">Lector</p>
-        <p class="hint" th:text="'Marca: ' + ${reader.brand}">Marca</p>
-        <a href="/readers" class="btn btn-secondary">← Lectores</a>
-        <a th:href="@{/readers/{id}/edit(id=${reader.id})}" class="btn btn-secondary">Editar lector</a>
-    </div>
+<html xmlns:th="http://www.thymeleaf.org" lang="es" class="light">
+<head th:replace="~{fragments/dh-head :: dhHead('Antenas')}"></head>
+<body class="min-h-screen bg-background text-on-background">
+<aside th:replace="~{fragments/dh-nav :: dhSidebar(activeNav='readers')}"></aside>
+<main class="ml-[260px] flex min-h-screen flex-col bg-background">
+    <header th:replace="~{fragments/dh-nav :: dhTopbar('Antenas del lector')}"></header>
+    <div class="custom-scrollbar flex-1 space-y-lg overflow-y-auto p-margin-desktop max-w-max-width">
+        <div class="flex flex-wrap items-center gap-sm">
+            <a th:href="@{/readers}" class="inline-flex items-center gap-xs rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-label-md text-on-surface hover:bg-surface-container-low">Lectores</a>
+            <a th:href="@{/readers/{id}/edit(id=${reader.id})}" class="inline-flex items-center gap-xs rounded-lg border border-outline-variant px-md py-sm text-label-md text-primary hover:bg-surface-container-low">Editar lector</a>
+        </div>
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm">
+            <h1 class="font-headline-md text-headline-md text-on-background">Antenas</h1>
+            <p class="mt-xs font-title-md text-title-md text-on-surface" th:text="${reader.name} + ' (' + ${reader.id} + ')'">Lector</p>
+            <p class="mt-sm text-body-md text-on-surface-variant" th:text="'Marca: ' + ${reader.brand}">Marca</p>
+        </div>
 
-    <div th:if="${success}" class="alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert-error" th:text="${error}"></div>
+        <div th:if="${success}" class="rounded-xl border border-outline-variant bg-surface-container-low px-lg py-md text-body-md text-on-secondary-fixed" th:text="${success}"></div>
+        <div th:if="${error}" class="rounded-xl border border-error bg-error-container px-lg py-md text-body-md text-on-error-container" th:text="${error}"></div>
 
-    <div class="box" th:if="${rfOptions != null}">
-        <h2 style="margin-bottom:10px;">Potencia TX y sensibilidad RX</h2>
-        <p class="hint">Los valores exactos dependen del modelo y de la región normativa. Con el lector <strong>conectado</strong> (Impinj), la lista se obtiene de las tablas del hardware; si no, se muestran valores típicos de referencia.</p>
-        <p style="margin-top:10px;">
-            <span th:if="${rfOptions.fromConnectedReader}" class="badge badge-ok">Listas desde lector conectado</span>
-            <span th:unless="${rfOptions.fromConnectedReader}" class="badge badge-warn">Listas genéricas — conecte el lector para valores exactos</span>
-        </p>
-        <details>
-            <summary>Listado completo de potencias TX disponibles (<span th:text="${#lists.size(rfOptions.txPowersDbm)}">0</span> valores)</summary>
-            <div style="margin-top:10px; max-height:220px; overflow:auto; border:1px solid #e2e8f0; border-radius:6px; padding:8px;">
-                <span th:each="x,iter : ${rfOptions.txPowersDbm}">
-                    <code th:text="${#numbers.formatDecimal(x,1,2)}">0</code><span th:if="${!iter.last}">, </span>
-                </span>
+        <div class="space-y-md rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm" th:if="${rfOptions != null}">
+            <h2 class="font-title-md text-title-md text-on-background">Potencia TX y sensibilidad RX</h2>
+            <p class="text-body-md text-on-surface-variant">Con lector <strong class="text-on-surface">Impinj conectado</strong>, las listas salen del hardware; si no, valores de referencia.</p>
+            <p class="flex flex-wrap gap-sm">
+                <span th:if="${rfOptions.fromConnectedReader}" class="inline-flex rounded-full border border-green-200 bg-green-50 px-md py-xs text-label-md font-bold uppercase text-green-800">Desde lector</span>
+                <span th:unless="${rfOptions.fromConnectedReader}" class="inline-flex rounded-full border border-amber-200 bg-amber-50 px-md py-xs text-label-md font-bold uppercase text-amber-900">Listas genéricas</span>
+            </p>
+            <details class="rounded-lg border border-outline-variant bg-surface-container-low p-md">
+                <summary class="cursor-pointer font-label-md text-label-md text-primary">Potencias TX (<span th:text="${#lists.size(rfOptions.txPowersDbm)}">0</span>)</summary>
+                <div class="custom-scrollbar mt-sm max-h-52 overflow-auto text-body-md text-on-surface">
+                    <span th:each="x,iter : ${rfOptions.txPowersDbm}">
+                        <code class="rounded bg-surface-container-high px-0.5 font-code-md" th:text="${#numbers.formatDecimal(x,1,2)}">0</code><span th:if="${!iter.last}">, </span>
+                    </span>
+                </div>
+            </details>
+            <details class="rounded-lg border border-outline-variant bg-surface-container-low p-md">
+                <summary class="cursor-pointer font-label-md text-label-md text-primary">Sensibilidades RX (<span th:text="${#lists.size(rfOptions.rxSensitivitiesDbm)}">0</span>)</summary>
+                <div class="custom-scrollbar mt-sm max-h-52 overflow-auto text-body-md text-on-surface">
+                    <span th:each="x,iter : ${rfOptions.rxSensitivitiesDbm}">
+                        <code class="rounded bg-surface-container-high px-0.5 font-code-md" th:text="${#numbers.formatDecimal(x,1,1)}">0</code><span th:if="${!iter.last}">, </span>
+                    </span>
+                </div>
+            </details>
+            <div>
+                <label class="mb-xs block font-label-md text-label-md uppercase text-on-surface-variant" for="presetSite">Sugerencia por instalación</label>
+                <select id="presetSite" class="mt-xs block w-full max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md shadow-sm" onchange="rfGatewayApplySitePreset(this)">
+                    <option value="">— Elija entorno —</option>
+                    <option value="counter">Mostrador / &lt; 1 m</option>
+                    <option value="room">Sala / 1–4 m</option>
+                    <option value="aisle">Pasillo / 4–10 m</option>
+                    <option value="warehouse">Almacén</option>
+                    <option value="max">Máximo hardware</option>
+                </select>
+                <p class="mt-xs text-[12px] text-on-surface-variant">Revise normativa ERP local.</p>
             </div>
-        </details>
-        <details style="margin-top:8px;">
-            <summary>Listado de sensibilidades RX (<span th:text="${#lists.size(rfOptions.rxSensitivitiesDbm)}">0</span> valores, dBm)</summary>
-            <div style="margin-top:10px; max-height:220px; overflow:auto; border:1px solid #e2e8f0; border-radius:6px; padding:8px;">
-                <span th:each="x,iter : ${rfOptions.rxSensitivitiesDbm}">
-                    <code th:text="${#numbers.formatDecimal(x,1,1)}">0</code><span th:if="${!iter.last}">, </span>
-                </span>
+        </div>
+
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm" th:if="${hardware != null}">
+            <h2 class="font-title-md text-title-md text-on-background">Hardware (Impinj)</h2>
+            <dl class="mt-md grid grid-cols-1 gap-sm sm:grid-cols-[180px_1fr] sm:gap-x-md">
+                <dt class="text-label-md font-bold uppercase tracking-wide text-on-surface-variant">Modelo</dt>
+                <dd class="text-body-md text-on-surface" th:text="${hardware.modelName}">—</dd>
+                <dt class="text-label-md font-bold uppercase tracking-wide text-on-surface-variant">Nº modelo</dt>
+                <dd class="text-body-md text-on-surface" th:text="${hardware.modelNumber}">—</dd>
+                <dt class="text-label-md font-bold uppercase tracking-wide text-on-surface-variant">Firmware</dt>
+                <dd class="text-body-md text-on-surface" th:text="${hardware.firmwareVersion}">—</dd>
+                <dt class="text-label-md font-bold uppercase tracking-wide text-on-surface-variant">Puertos</dt>
+                <dd class="text-body-md text-on-surface" th:text="${hardware.antennaCount}">—</dd>
+                <dt class="text-label-md font-bold uppercase tracking-wide text-on-surface-variant">XArray</dt>
+                <dd class="text-body-md text-on-surface" th:text="${hardware.xArray} ? 'Sí' : 'No'">—</dd>
+            </dl>
+        </div>
+
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm" th:if="${reader.brand != null and reader.brand.name() != 'IMPINJ_OCTANE'}">
+            <p class="text-body-md text-on-surface">Detección automática solo para <strong>IMPINJ_OCTANE</strong>.</p>
+        </div>
+
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm" th:if="${reader.brand != null and reader.brand.name() == 'IMPINJ_OCTANE'}">
+            <h2 class="font-title-md text-title-md text-on-background">Detectar antenas</h2>
+            <p class="mt-sm text-body-md text-on-surface-variant">Requiere lector <strong class="text-on-surface">conectado</strong>.</p>
+            <form class="mt-md" th:action="@{/readers/{id}/antennas/discover(id=${reader.id})}" method="post">
+                <button type="submit" class="rounded-lg bg-primary px-lg py-sm font-bold text-on-primary hover:bg-primary-container">Detectar y sincronizar</button>
+            </form>
+        </div>
+
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm">
+            <h2 class="font-title-md text-title-md text-on-background">Añadir / actualizar por puerto</h2>
+            <p class="mt-sm text-body-md text-on-surface-variant">ID: <code class="rounded bg-surface-container-high px-1 font-code-md text-primary" th:text="${reader.id} + '-antenna-'">x</code> + puerto</p>
+            <form th:action="@{/readers/{rid}/antennas(rid=${reader.id})}" method="post" class="mt-lg grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-3">
+                <div>
+                    <label class="mb-xs block font-label-md text-label-md uppercase text-on-surface-variant" for="portNumber">Puerto</label>
+                    <input class="mt-xs block w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md shadow-sm" type="number" id="portNumber" name="portNumber" min="1" max="512" required/>
+                </div>
+                <div>
+                    <label class="mb-xs block font-label-md text-label-md uppercase text-on-surface-variant" for="name">Nombre</label>
+                    <input class="mt-xs block w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md shadow-sm" type="text" id="name" name="name" placeholder="Opcional"/>
+                </div>
+                <div>
+                    <label class="mb-xs block font-label-md text-label-md uppercase text-on-surface-variant" for="addTx">TX</label>
+                    <select id="addTx" name="txPowerDbm" class="mt-xs block w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md shadow-sm">
+                        <option value="">Máximo hardware</option>
+                        <option th:each="x : ${rfOptions.txPowersDbm}" th:value="${x}" th:text="${#numbers.formatDecimal(x,1,2)} + ' dBm'"></option>
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-xs block font-label-md text-label-md uppercase text-on-surface-variant" for="addRx">RX</label>
+                    <select id="addRx" name="rxSensitivityDbm" class="mt-xs block w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md shadow-sm">
+                        <option value="">Máxima sensibilidad</option>
+                        <option th:each="x : ${rfOptions.rxSensitivitiesDbm}" th:value="${x}" th:text="${#numbers.formatDecimal(x,1,1)} + ' dBm'"></option>
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-xs block font-label-md text-label-md uppercase text-on-surface-variant" for="addEn">Estado</label>
+                    <select id="addEn" name="enabled" class="mt-xs block w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md shadow-sm">
+                        <option value="true" selected>Activa</option>
+                        <option value="false">Inactiva</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="rounded-lg bg-primary px-lg py-sm font-bold text-on-primary hover:bg-primary-container">Guardar antena</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm">
+            <h2 class="font-title-md text-title-md text-on-background">Antenas configuradas</h2>
+            <div class="mt-md overflow-x-auto rounded-lg border border-outline-variant" th:if="${antennas != null and !antennas.empty}">
+                <table class="w-full min-w-[900px] border-collapse text-left text-body-md">
+                    <thead>
+                    <tr class="border-b border-outline-variant bg-inverse-surface text-surface-bright">
+                        <th class="px-md py-sm font-label-md text-label-md uppercase">ID</th>
+                        <th class="px-md py-sm font-label-md text-label-md uppercase">Puerto</th>
+                        <th class="px-md py-sm font-label-md text-label-md uppercase">Nombre</th>
+                        <th class="px-md py-sm font-label-md text-label-md uppercase">Estado</th>
+                        <th class="px-md py-sm font-label-md text-label-md uppercase">TX</th>
+                        <th class="px-md py-sm font-label-md text-label-md uppercase">RX</th>
+                        <th class="px-md py-sm text-right font-label-md text-label-md uppercase"></th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant">
+                    <tr th:each="a : ${antennas}" class="hover:bg-surface-container-low">
+                        <form th:action="@{/readers/{rid}/antennas(rid=${reader.id})}" method="post" class="contents">
+                            <input type="hidden" name="portNumber" th:value="${a.portNumber}"/>
+                            <td class="px-md py-sm font-code-md text-primary" th:text="${a.id}"></td>
+                            <td class="px-md py-sm" th:text="${a.portNumber}"></td>
+                            <td class="px-md py-sm">
+                                <input type="text" name="name" th:value="${a.name}" placeholder="Nombre"
+                                       class="w-full min-w-[100px] max-w-[180px] rounded border border-outline-variant bg-surface-container-lowest px-sm py-1 text-body-md"/>
+                            </td>
+                            <td class="px-md py-sm">
+                                <select name="enabled" class="rounded border border-outline-variant bg-surface-container-lowest px-sm py-1 text-body-md">
+                                    <option value="true" th:selected="${a.enabled}">Activa</option>
+                                    <option value="false" th:selected="${!a.enabled}">Inactiva</option>
+                                </select>
+                            </td>
+                            <td class="px-md py-sm">
+                                <select name="txPowerDbm" class="max-w-[120px] rounded border border-outline-variant bg-surface-container-lowest px-sm py-1 text-body-md">
+                                    <option value="" th:selected="${a.txPowerDbm == null}">Máx.</option>
+                                    <option th:each="x : ${rfOptions.txPowersDbm}"
+                                            th:value="${x}"
+                                            th:selected="${a.txPowerDbm != null and T(java.lang.Math).abs(a.txPowerDbm - x) &lt; 0.06}"
+                                            th:text="${#numbers.formatDecimal(x,1,2)}"></option>
+                                </select>
+                            </td>
+                            <td class="px-md py-sm">
+                                <select name="rxSensitivityDbm" class="max-w-[120px] rounded border border-outline-variant bg-surface-container-lowest px-sm py-1 text-body-md">
+                                    <option value="" th:selected="${a.rxSensitivityDbm == null}">Máx.</option>
+                                    <option th:each="x : ${rfOptions.rxSensitivitiesDbm}"
+                                            th:value="${x}"
+                                            th:selected="${a.rxSensitivityDbm != null and T(java.lang.Math).abs(a.rxSensitivityDbm - x) &lt; 0.6}"
+                                            th:text="${#numbers.formatDecimal(x,1,1)}"></option>
+                                </select>
+                            </td>
+                            <td class="px-md py-sm text-right">
+                                <button type="submit" class="rounded-lg bg-primary px-md py-sm text-label-md font-bold text-on-primary hover:bg-primary-container">Guardar</button>
+                            </td>
+                        </form>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
-        </details>
-        <div class="form-group" style="margin-top:16px;">
-            <label for="presetSite">Sugerencia por tipo de instalación (rellena TX y RX más abajo)</label>
-            <select id="presetSite" class="wide" onchange="rfGatewayApplySitePreset(this)">
-                <option value="">— Elija entorno —</option>
-                <option value="counter">Mostrador / &lt; 1 m (baja potencia, RX estricto)</option>
-                <option value="room">Sala / 1–4 m</option>
-                <option value="aisle">Pasillo / 4–10 m</option>
-                <option value="warehouse">Almacén / largo alcance</option>
-                <option value="max">Máximo permitido por hardware (TX y RX al máximo)</option>
-            </select>
-            <p class="hint">Tras elegir, revise los desplegables del formulario y pulse Guardar. Cumpla la normativa local (ERP) en su emplazamiento.</p>
+            <p th:if="${antennas == null or antennas.empty}" class="mt-md text-body-md text-on-surface-variant">No hay antenas en base de datos.</p>
+        </div>
+
+        <div class="rounded-xl border border-outline-variant bg-surface-container-low p-lg text-body-md text-on-surface-variant">
+            <span class="font-label-md text-label-md text-on-surface">API:</span>
+            <code class="ml-1 rounded bg-surface-container-high px-1 font-code-md">GET /api/readers/<span th:text="${reader.id}"></span>/hardware</code>
         </div>
     </div>
-
-    <div class="box" th:if="${hardware != null}">
-        <h2 style="margin-bottom:12px;">Hardware (Impinj conectado)</h2>
-        <dl>
-            <dt>Modelo</dt>
-            <dd th:text="${hardware.modelName}">—</dd>
-            <dt>Número modelo</dt>
-            <dd th:text="${hardware.modelNumber}">—</dd>
-            <dt>Firmware</dt>
-            <dd th:text="${hardware.firmwareVersion}">—</dd>
-            <dt>Puertos de antena (según lector)</dt>
-            <dd th:text="${hardware.antennaCount}">—</dd>
-            <dt>XArray</dt>
-            <dd th:text="${hardware.xArray} ? 'Sí' : 'No'">—</dd>
-        </dl>
-        <p class="hint" th:if="${hardware.xArray}">XArray usa identificadores de antena especiales; la detección automática cubre el conteo estándar. Ajuste manual si Impinj lo requiere.</p>
-    </div>
-
-    <div class="box" th:if="${reader.brand != null and reader.brand.name() != 'IMPINJ_OCTANE'}">
-        <p>La detección automática de antenas vía Octane solo aplica a marca <strong>IMPINJ_OCTANE</strong>. Para otras marcas, defina antenas manualmente cuando exista el driver.</p>
-    </div>
-
-    <div class="box" th:if="${reader.brand != null and reader.brand.name() == 'IMPINJ_OCTANE'}">
-        <h2 style="margin-bottom:10px;">Detectar desde el lector</h2>
-        <p class="hint">Consulta <code>queryFeatureSet()</code> (número de antenas físicas) y crea/actualiza filas en la base para los puertos 1…N. El lector debe estar <strong>conectado</strong>.</p>
-        <form th:action="@{/readers/{id}/antennas/discover(id=${reader.id})}" method="post">
-            <button type="submit" class="btn btn-info">Detectar y sincronizar antenas</button>
-        </form>
-    </div>
-
-    <div class="box">
-        <h2 style="margin-bottom:10px;">Añadir o actualizar por puerto</h2>
-        <p class="hint">ID de antena: <code th:text="${reader.id} + '-antenna-'">&lt;reader&gt;-antenna-</code>&lt;puerto&gt;</p>
-        <form th:action="@{/readers/{rid}/antennas(rid=${reader.id})}" method="post" class="grid2">
-            <div class="form-group">
-                <label for="portNumber">Puerto (1…)</label>
-                <input type="number" id="portNumber" name="portNumber" min="1" max="512" required />
-            </div>
-            <div class="form-group">
-                <label for="name">Nombre (opcional)</label>
-                <input type="text" id="name" name="name" placeholder="ej. Entrada principal" />
-            </div>
-            <div class="form-group">
-                <label for="addTx">Potencia TX</label>
-                <select id="addTx" name="txPowerDbm" class="wide">
-                    <option value="">Máximo permitido por hardware</option>
-                    <option th:each="x : ${rfOptions.txPowersDbm}" th:value="${x}" th:text="${#numbers.formatDecimal(x,1,2)} + ' dBm'">20 dBm</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="addRx">Sensibilidad RX</label>
-                <select id="addRx" name="rxSensitivityDbm" class="wide">
-                    <option value="">Máxima sensibilidad (hardware)</option>
-                    <option th:each="x : ${rfOptions.rxSensitivitiesDbm}" th:value="${x}" th:text="${#numbers.formatDecimal(x,1,1)} + ' dBm'">-70 dBm</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="addEn">Estado antena</label>
-                <select id="addEn" name="enabled" class="wide">
-                    <option value="true" selected>Activa</option>
-                    <option value="false">Inactiva</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <button type="submit" class="btn btn-success">Guardar antena</button>
-            </div>
-        </form>
-    </div>
-
-    <div class="box">
-        <h2 style="margin-bottom:10px;">Antenas configuradas</h2>
-        <table th:if="${antennas != null and !antennas.empty}">
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Puerto</th>
-                <th>Nombre</th>
-                <th>Estado</th>
-                <th>TX</th>
-                <th>RX</th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="a : ${antennas}">
-                <form th:action="@{/readers/{rid}/antennas(rid=${reader.id})}" method="post" style="display:contents">
-                    <input type="hidden" name="portNumber" th:value="${a.portNumber}"/>
-                    <td th:text="${a.id}"></td>
-                    <td th:text="${a.portNumber}"></td>
-                    <td><input type="text" class="mini" name="name" th:value="${a.name}" placeholder="Nombre"/></td>
-                    <td>
-                        <select name="enabled" class="mini">
-                            <option value="true" th:selected="${a.enabled}">Activa</option>
-                            <option value="false" th:selected="${!a.enabled}">Inactiva</option>
-                        </select>
-                    </td>
-                    <td>
-                        <select name="txPowerDbm" class="mini">
-                            <option value="" th:selected="${a.txPowerDbm == null}">Máx.</option>
-                            <option th:each="x : ${rfOptions.txPowersDbm}"
-                                    th:value="${x}"
-                                    th:selected="${a.txPowerDbm != null and T(java.lang.Math).abs(a.txPowerDbm - x) &lt; 0.06}"
-                                    th:text="${#numbers.formatDecimal(x,1,2)}">20</option>
-                        </select>
-                    </td>
-                    <td>
-                        <select name="rxSensitivityDbm" class="mini">
-                            <option value="" th:selected="${a.rxSensitivityDbm == null}">Máx.</option>
-                            <option th:each="x : ${rfOptions.rxSensitivitiesDbm}"
-                                    th:value="${x}"
-                                    th:selected="${a.rxSensitivityDbm != null and T(java.lang.Math).abs(a.rxSensitivityDbm - x) &lt; 0.6}"
-                                    th:text="${#numbers.formatDecimal(x,1,1)}">-70</option>
-                        </select>
-                    </td>
-                    <td><button type="submit" class="btn btn-success" style="padding:6px 12px;font-size:13px;">Guardar</button></td>
-                </form>
-            </tr>
-            </tbody>
-        </table>
-        <p th:if="${antennas == null or antennas.empty}" class="hint">No hay antenas en base de datos. Use detección o el formulario superior.</p>
-    </div>
-
-    <div class="box">
-        <h3 style="margin-bottom:8px;">API REST</h3>
-        <p class="hint"><code>GET /api/readers/<span th:text="${reader.id}"></span>/hardware</code> — capacidades en JSON</p>
-        <p class="hint"><code>POST /api/readers/<span th:text="${reader.id}"></span>/antennas/discover</code> — mismo efecto que el botón</p>
-    </div>
-</div>
+</main>
 <script th:inline="javascript">
 (function () {
     function pickClosest(select, target) {
@@ -238,13 +213,7 @@
         var addTx = document.getElementById('addTx');
         var addRx = document.getElementById('addRx');
         if (!addTx || !addRx) return;
-        var map = {
-            counter: [18, -68],
-            room: [22, -72],
-            aisle: [28, -78],
-            warehouse: [32, -82],
-            max: ['', '']
-        };
+        var map = { counter: [18, -68], room: [22, -72], aisle: [28, -78], warehouse: [32, -82], max: ['', ''] };
         var pair = map[key];
         if (!pair) return;
         pickClosest(addTx, pair[0]);

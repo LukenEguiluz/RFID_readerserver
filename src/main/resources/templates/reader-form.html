@@ -1,70 +1,46 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agregar Lector - doHealth RFID Gateway</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .header h1 { color: #333; margin-bottom: 10px; }
-        .form-box { background: white; padding: 24px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-weight: 600; color: #333; margin-bottom: 6px; }
-        .form-group input[type="text"], .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; }
-        .form-group input[type="checkbox"] { width: 18px; height: 18px; margin-right: 8px; vertical-align: middle; }
-        .btn { display: inline-block; padding: 10px 20px; background: #dc2626; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; font-size: 14px; margin-right: 10px; }
-        .btn:hover { background: #b91c1c; }
-        .btn-success { background: #48bb78; }
-        .btn-success:hover { background: #38a169; }
-        .btn-secondary { background: #718096; }
-        .btn-secondary:hover { background: #4a5568; }
-        .alert-error { background: #fed7d7; color: #742a2a; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
-        .hint { font-size: 12px; color: #718096; margin-top: 4px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>➕ Agregar Lector</h1>
-            <p>Configura un nuevo lector RFID Impinj</p>
-        </div>
-        <div class="form-box">
-            <div th:if="${error}" class="alert-error" th:text="${error}"></div>
-            <form th:action="@{/readers}" th:object="${reader}" method="post">
-                <div class="form-group">
-                    <label for="id">ID del lector *</label>
-                    <input type="text" id="id" th:field="*{id}" required placeholder="ej: reader-1" />
-                    <p class="hint">Identificador único (sin espacios). Ej: reader-1, lector-sede-a</p>
+<html xmlns:th="http://www.thymeleaf.org" lang="es" class="light">
+<head th:replace="~{fragments/dh-head :: dhHead('Nuevo lector')}"></head>
+<body class="min-h-screen bg-background text-on-background">
+<aside th:replace="~{fragments/dh-nav :: dhSidebar(activeNav='readers')}"></aside>
+<main class="ml-[260px] flex min-h-screen flex-col bg-background">
+    <header th:replace="~{fragments/dh-nav :: dhTopbar('Nuevo lector')}"></header>
+    <div class="custom-scrollbar flex-1 overflow-y-auto p-margin-desktop max-w-max-width">
+        <div class="mx-auto max-w-xl rounded-xl border border-outline-variant bg-surface-container-lowest p-xl shadow-sm">
+            <p class="mb-lg text-body-md text-on-surface-variant">Alta de lector RFID (gateway).</p>
+            <div th:if="${error}" class="mb-lg rounded-lg border border-error bg-error-container px-md py-sm text-body-md text-on-error-container" th:text="${error}"></div>
+            <form th:action="@{/readers}" th:object="${reader}" method="post" class="space-y-lg">
+                <div>
+                    <label class="mb-xs block font-label-md text-label-md uppercase tracking-wide text-on-surface-variant" for="id">ID del lector *</label>
+                    <input class="mt-xs block w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/25" type="text" id="id" th:field="*{id}" required placeholder="ej: reader-1"/>
+                    <p class="mt-xs text-[12px] text-on-surface-variant">Identificador único (sin espacios).</p>
                 </div>
-                <div class="form-group">
-                    <label for="name">Nombre *</label>
-                    <input type="text" id="name" th:field="*{name}" required placeholder="ej: Lector Principal" />
+                <div>
+                    <label class="mb-xs block font-label-md text-label-md uppercase tracking-wide text-on-surface-variant" for="name">Nombre *</label>
+                    <input class="mt-xs block w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/25" type="text" id="name" th:field="*{name}" required placeholder="ej: Lector principal"/>
                 </div>
-                <div class="form-group">
-                    <label for="brand">Marca del lector</label>
-                    <select id="brand" th:field="*{brand}">
+                <div>
+                    <label class="mb-xs block font-label-md text-label-md uppercase tracking-wide text-on-surface-variant" for="brand">Marca</label>
+                    <select class="mt-xs block w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/25" id="brand" th:field="*{brand}">
                         <option th:each="b : ${T(com.rfidgateway.model.ReaderBrand).values()}" th:value="${b}" th:text="${b}"></option>
                     </select>
-                    <p class="hint">Solo <strong>IMPINJ_OCTANE</strong> conecta hoy vía Octane SDK.</p>
+                    <p class="mt-xs text-[12px] text-on-surface-variant">Solo <strong class="text-on-surface">IMPINJ_OCTANE</strong> conecta hoy vía Octane SDK.</p>
                 </div>
-                <div class="form-group">
-                    <label for="hostname">Hostname o IP *</label>
-                    <input type="text" id="hostname" th:field="*{hostname}" required placeholder="ej: 192.168.1.100 o reader.local" />
-                    <p class="hint">IP o nombre de red del equipo lector Impinj</p>
+                <div>
+                    <label class="mb-xs block font-label-md text-label-md uppercase tracking-wide text-on-surface-variant" for="hostname">Hostname o IP *</label>
+                    <input class="mt-xs block w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/25" type="text" id="hostname" th:field="*{hostname}" required placeholder="192.168.1.100"/>
                 </div>
-                <div class="form-group">
-                    <label><input type="checkbox" th:field="*{enabled}" /> Habilitado</label>
-                    <p class="hint">Si está habilitado, el gateway intentará conectar al iniciar</p>
+                <div class="flex items-center gap-sm">
+                    <input class="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary/30" type="checkbox" th:field="*{enabled}" id="enabled"/>
+                    <label class="text-body-md text-on-surface" for="enabled">Habilitado (conectar al iniciar)</label>
                 </div>
-                <div style="margin-top: 20px;">
-                    <button type="submit" class="btn btn-success">Guardar y conectar</button>
-                    <a href="/readers" class="btn btn-secondary">Cancelar</a>
+                <div class="flex flex-wrap gap-sm pt-md">
+                    <button type="submit" class="rounded-lg bg-primary px-lg py-sm font-bold text-on-primary shadow-sm hover:bg-primary-container">Guardar</button>
+                    <a th:href="@{/readers}" class="inline-flex items-center rounded-lg border border-outline-variant bg-surface-container-low px-lg py-sm font-label-md text-on-surface hover:bg-surface-container-high">Cancelar</a>
                 </div>
             </form>
         </div>
     </div>
+</main>
 </body>
 </html>
