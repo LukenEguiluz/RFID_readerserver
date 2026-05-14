@@ -9,6 +9,14 @@
         <div th:if="${success}" class="rounded-xl border border-outline-variant bg-surface-container-low px-lg py-md text-body-md text-on-secondary-fixed" th:text="${success}"></div>
         <div th:if="${error}" class="rounded-xl border border-error bg-error-container px-lg py-md text-body-md text-on-error-container" th:text="${error}"></div>
 
+        <div class="flex flex-col items-center gap-lg rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm sm:flex-row sm:items-center sm:justify-start sm:gap-xl">
+            <img th:replace="~{fragments/dh-logo :: dhLogoDashboard}"/>
+            <div class="max-w-xl text-center sm:text-left">
+                <p class="font-headline-md text-headline-md text-on-background">doHealth RFID Gateway</p>
+                <p class="mt-sm text-body-md text-on-surface-variant">Resumen de lectores y accesos rápidos al sistema.</p>
+            </div>
+        </div>
+
         <div class="grid grid-cols-12 gap-gutter">
             <div class="col-span-12 flex flex-col justify-between rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm lg:col-span-4">
                 <div class="flex items-start justify-between">

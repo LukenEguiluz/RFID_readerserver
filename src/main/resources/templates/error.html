@@ -5,7 +5,10 @@
 <aside th:replace="~{fragments/dh-nav :: dhSidebar(activeNav='home')}"></aside>
 <main class="ml-[260px] flex min-h-screen flex-col items-center justify-center bg-background p-margin-desktop">
     <div class="w-full max-w-lg rounded-xl border border-outline-variant bg-surface-container-lowest p-xl shadow-sm">
-        <h1 class="font-headline-md text-headline-md text-on-background">Error</h1>
+        <div class="mb-lg flex justify-center">
+            <img th:replace="~{fragments/dh-logo :: dhLogoHero}"/>
+        </div>
+        <h1 class="text-center font-headline-md text-headline-md text-on-background">Error</h1>
         <p class="mt-md font-bold text-primary" th:text="${status}">status</p>
         <p class="mt-sm text-body-md text-on-surface" th:if="${error}" th:text="${error}">error</p>
         <p class="mt-sm text-body-md text-on-surface" th:if="${message}" th:text="${message}">message</p>
