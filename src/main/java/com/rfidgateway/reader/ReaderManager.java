@@ -18,6 +18,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,6 +68,36 @@ public class ReaderManager {
         return readerRepository.findById(readerId)
             .map(r -> r.getBrand() == ReaderBrand.IMPINJ_OCTANE)
             .orElse(false);
+    }
+
+    /**
+     * Tablas de potencia TX y sensibilidad RX del lector (Impinj conectado) o valores genéricos de referencia.
+     */
+    public AntennaRfOptions getAntennaRfOptions(String readerId) {
+        if (!usesImpinjOctane(readerId)) {
+            return AntennaRfOptions.fallback();
+        }
+        ImpinjReader reader = readers.get(readerId);
+        if (reader == null || !reader.isConnected()) {
+            return AntennaRfOptions.fallback();
+        }
+        try {
+            FeatureSet f = reader.queryFeatureSet();
+            List<Double> tx = new ArrayList<>();
+            for (TxPowerTableEntry t : f.getTxPowers()) {
+                tx.add(t.Dbm);
+            }
+            List<Double> rx = new ArrayList<>();
+            for (RxSensitivityTableEntry t : f.getRxSensitivities()) {
+                rx.add(t.Dbm);
+            }
+            if (!tx.isEmpty() && !rx.isEmpty()) {
+                return new AntennaRfOptions(List.copyOf(tx), List.copyOf(rx), true);
+            }
+        } catch (OctaneSdkException e) {
+            log.warn("getAntennaRfOptions {}: {}", readerId, e.getMessage());
+        }
+        return AntennaRfOptions.fallback();
     }
 
     /**
@@ -313,10 +345,20 @@ public class ReaderManager {
                 ports[i] = enabledAntennas.get(i).getPortNumber();
             }
         }
-        configureReaderSettingsForPorts(readerId, settings, ports);
+        configureReaderSettingsForPorts(readerId, settings, ports, enabledAntennas);
     }
 
     private void configureReaderSettingsForPorts(String readerId, Settings settings, short[] ports) throws OctaneSdkException {
+        List<Antenna> enabled = antennaRepository.findByReaderIdAndEnabledTrue(readerId);
+        configureReaderSettingsForPorts(readerId, settings, ports, enabled);
+    }
+
+    private void configureReaderSettingsForPorts(
+        String readerId,
+        Settings settings,
+        short[] ports,
+        List<Antenna> enabledAntennas
+    ) throws OctaneSdkException {
         settings.setReaderMode(ReaderMode.AutoSetDenseReader);
         settings.setSearchMode(SearchMode.SingleTarget);
         settings.setSession((short) 1);
@@ -334,11 +376,31 @@ public class ReaderManager {
         if (ports == null || ports.length == 0) {
             ports = new short[]{1};
         }
+        Map<Short, Antenna> byPort = new HashMap<>();
+        if (enabledAntennas != null) {
+            for (Antenna a : enabledAntennas) {
+                if (a.getPortNumber() != null) {
+                    byPort.put(a.getPortNumber(), a);
+                }
+            }
+        }
         antennas.enableById(ports);
         for (short port : ports) {
             AntennaConfig ac = antennas.getAntenna(port);
-            if (ac != null) {
+            if (ac == null) {
+                continue;
+            }
+            Antenna db = byPort.get(port);
+            if (db != null && db.getTxPowerDbm() != null) {
+                ac.setIsMaxTxPower(false);
+                ac.setTxPowerinDbm(db.getTxPowerDbm());
+            } else {
                 ac.setIsMaxTxPower(true);
+            }
+            if (db != null && db.getRxSensitivityDbm() != null) {
+                ac.setIsMaxRxSensitivity(false);
+                ac.setRxSensitivityinDbm(db.getRxSensitivityDbm());
+            } else {
                 ac.setIsMaxRxSensitivity(true);
             }
         }

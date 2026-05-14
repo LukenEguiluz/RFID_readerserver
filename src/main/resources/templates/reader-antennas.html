@@ -7,12 +7,13 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
+        .container { max-width: 960px; margin: 0 auto; }
         .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .box { background: white; padding: 24px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .form-group { margin-bottom: 14px; }
         label { display: block; font-weight: 600; margin-bottom: 6px; color: #333; }
-        input[type="text"], input[type="number"] { width: 100%; max-width: 280px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; }
+        input[type="text"], input[type="number"], select { width: 100%; max-width: 320px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; }
+        select.wide { max-width: 100%; }
         .btn { display: inline-block; padding: 10px 18px; background: #dc2626; color: white; text-decoration: none; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; margin: 4px 8px 4px 0; }
         .btn:hover { background: #b91c1c; }
         .btn-secondary { background: #718096; }
@@ -20,13 +21,20 @@
         .btn-info { background: #3182ce; }
         .alert-success { background: #c6f6d5; color: #22543d; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
         .alert-error { background: #fed7d7; color: #742a2a; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+        th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
         th { background: #edf2f7; }
         .hint { font-size: 12px; color: #718096; margin-top: 6px; }
-        dl { display: grid; grid-template-columns: 160px 1fr; gap: 6px 12px; font-size: 14px; }
+        dl { display: grid; grid-template-columns: 180px 1fr; gap: 6px 12px; font-size: 14px; }
         dt { color: #718096; }
         dd { font-weight: 500; }
+        details { margin-top: 12px; }
+        summary { cursor: pointer; color: #2b6cb0; font-weight: 600; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .badge-ok { background: #c6f6d5; color: #22543d; }
+        .badge-warn { background: #feebc8; color: #7b341e; }
+        .grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; align-items: end; }
+        .mini { font-size: 12px; max-width: 140px; }
     </style>
 </head>
 <body>
@@ -41,6 +49,43 @@
 
     <div th:if="${success}" class="alert-success" th:text="${success}"></div>
     <div th:if="${error}" class="alert-error" th:text="${error}"></div>
+
+    <div class="box" th:if="${rfOptions != null}">
+        <h2 style="margin-bottom:10px;">Potencia TX y sensibilidad RX</h2>
+        <p class="hint">Los valores exactos dependen del modelo y de la región normativa. Con el lector <strong>conectado</strong> (Impinj), la lista se obtiene de las tablas del hardware; si no, se muestran valores típicos de referencia.</p>
+        <p style="margin-top:10px;">
+            <span th:if="${rfOptions.fromConnectedReader}" class="badge badge-ok">Listas desde lector conectado</span>
+            <span th:unless="${rfOptions.fromConnectedReader}" class="badge badge-warn">Listas genéricas — conecte el lector para valores exactos</span>
+        </p>
+        <details>
+            <summary>Listado completo de potencias TX disponibles (<span th:text="${#lists.size(rfOptions.txPowersDbm)}">0</span> valores)</summary>
+            <div style="margin-top:10px; max-height:220px; overflow:auto; border:1px solid #e2e8f0; border-radius:6px; padding:8px;">
+                <span th:each="x,iter : ${rfOptions.txPowersDbm}">
+                    <code th:text="${#numbers.formatDecimal(x,1,2)}">0</code><span th:if="${!iter.last}">, </span>
+                </span>
+            </div>
+        </details>
+        <details style="margin-top:8px;">
+            <summary>Listado de sensibilidades RX (<span th:text="${#lists.size(rfOptions.rxSensitivitiesDbm)}">0</span> valores, dBm)</summary>
+            <div style="margin-top:10px; max-height:220px; overflow:auto; border:1px solid #e2e8f0; border-radius:6px; padding:8px;">
+                <span th:each="x,iter : ${rfOptions.rxSensitivitiesDbm}">
+                    <code th:text="${#numbers.formatDecimal(x,1,1)}">0</code><span th:if="${!iter.last}">, </span>
+                </span>
+            </div>
+        </details>
+        <div class="form-group" style="margin-top:16px;">
+            <label for="presetSite">Sugerencia por tipo de instalación (rellena TX y RX más abajo)</label>
+            <select id="presetSite" class="wide" onchange="rfGatewayApplySitePreset(this)">
+                <option value="">— Elija entorno —</option>
+                <option value="counter">Mostrador / &lt; 1 m (baja potencia, RX estricto)</option>
+                <option value="room">Sala / 1–4 m</option>
+                <option value="aisle">Pasillo / 4–10 m</option>
+                <option value="warehouse">Almacén / largo alcance</option>
+                <option value="max">Máximo permitido por hardware (TX y RX al máximo)</option>
+            </select>
+            <p class="hint">Tras elegir, revise los desplegables del formulario y pulse Guardar. Cumpla la normativa local (ERP) en su emplazamiento.</p>
+        </div>
+    </div>
 
     <div class="box" th:if="${hardware != null}">
         <h2 style="margin-bottom:12px;">Hardware (Impinj conectado)</h2>
@@ -72,16 +117,37 @@
     </div>
 
     <div class="box">
-        <h2 style="margin-bottom:10px;">Añadir o editar por puerto</h2>
+        <h2 style="margin-bottom:10px;">Añadir o actualizar por puerto</h2>
         <p class="hint">ID de antena: <code th:text="${reader.id} + '-antenna-'">&lt;reader&gt;-antenna-</code>&lt;puerto&gt;</p>
-        <form th:action="@{/readers/{rid}/antennas(rid=${reader.id})}" method="post" style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
+        <form th:action="@{/readers/{rid}/antennas(rid=${reader.id})}" method="post" class="grid2">
             <div class="form-group">
                 <label for="portNumber">Puerto (1…)</label>
                 <input type="number" id="portNumber" name="portNumber" min="1" max="512" required />
             </div>
-            <div class="form-group" style="flex:1; min-width:200px;">
+            <div class="form-group">
                 <label for="name">Nombre (opcional)</label>
                 <input type="text" id="name" name="name" placeholder="ej. Entrada principal" />
+            </div>
+            <div class="form-group">
+                <label for="addTx">Potencia TX</label>
+                <select id="addTx" name="txPowerDbm" class="wide">
+                    <option value="">Máximo permitido por hardware</option>
+                    <option th:each="x : ${rfOptions.txPowersDbm}" th:value="${x}" th:text="${#numbers.formatDecimal(x,1,2)} + ' dBm'">20 dBm</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="addRx">Sensibilidad RX</label>
+                <select id="addRx" name="rxSensitivityDbm" class="wide">
+                    <option value="">Máxima sensibilidad (hardware)</option>
+                    <option th:each="x : ${rfOptions.rxSensitivitiesDbm}" th:value="${x}" th:text="${#numbers.formatDecimal(x,1,1)} + ' dBm'">-70 dBm</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="addEn">Estado antena</label>
+                <select id="addEn" name="enabled" class="wide">
+                    <option value="true" selected>Activa</option>
+                    <option value="false">Inactiva</option>
+                </select>
             </div>
             <div class="form-group">
                 <button type="submit" class="btn btn-success">Guardar antena</button>
@@ -97,15 +163,45 @@
                 <th>ID</th>
                 <th>Puerto</th>
                 <th>Nombre</th>
-                <th>Activa</th>
+                <th>Estado</th>
+                <th>TX</th>
+                <th>RX</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="a : ${antennas}">
-                <td th:text="${a.id}"></td>
-                <td th:text="${a.portNumber}"></td>
-                <td th:text="${a.name}"></td>
-                <td th:text="${a.enabled} ? 'Sí' : 'No'"></td>
+                <form th:action="@{/readers/{rid}/antennas(rid=${reader.id})}" method="post" style="display:contents">
+                    <input type="hidden" name="portNumber" th:value="${a.portNumber}"/>
+                    <td th:text="${a.id}"></td>
+                    <td th:text="${a.portNumber}"></td>
+                    <td><input type="text" class="mini" name="name" th:value="${a.name}" placeholder="Nombre"/></td>
+                    <td>
+                        <select name="enabled" class="mini">
+                            <option value="true" th:selected="${a.enabled}">Activa</option>
+                            <option value="false" th:selected="${!a.enabled}">Inactiva</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="txPowerDbm" class="mini">
+                            <option value="" th:selected="${a.txPowerDbm == null}">Máx.</option>
+                            <option th:each="x : ${rfOptions.txPowersDbm}"
+                                    th:value="${x}"
+                                    th:selected="${a.txPowerDbm != null and T(java.lang.Math).abs(a.txPowerDbm - x) &lt; 0.06}"
+                                    th:text="${#numbers.formatDecimal(x,1,2)}">20</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="rxSensitivityDbm" class="mini">
+                            <option value="" th:selected="${a.rxSensitivityDbm == null}">Máx.</option>
+                            <option th:each="x : ${rfOptions.rxSensitivitiesDbm}"
+                                    th:value="${x}"
+                                    th:selected="${a.rxSensitivityDbm != null and T(java.lang.Math).abs(a.rxSensitivityDbm - x) &lt; 0.6}"
+                                    th:text="${#numbers.formatDecimal(x,1,1)}">-70</option>
+                        </select>
+                    </td>
+                    <td><button type="submit" class="btn btn-success" style="padding:6px 12px;font-size:13px;">Guardar</button></td>
+                </form>
             </tr>
             </tbody>
         </table>
@@ -118,5 +214,43 @@
         <p class="hint"><code>POST /api/readers/<span th:text="${reader.id}"></span>/antennas/discover</code> — mismo efecto que el botón</p>
     </div>
 </div>
+<script th:inline="javascript">
+(function () {
+    function pickClosest(select, target) {
+        if (target === '' || target === null || target === undefined) {
+            select.selectedIndex = 0;
+            return;
+        }
+        var num = typeof target === 'number' ? target : parseFloat(target);
+        if (isNaN(num)) { return; }
+        var best = 0, bestDiff = 1e9;
+        for (var i = 1; i < select.options.length; i++) {
+            var v = parseFloat(select.options[i].value);
+            if (isNaN(v)) continue;
+            var d = Math.abs(v - num);
+            if (d < bestDiff) { bestDiff = d; best = i; }
+        }
+        select.selectedIndex = best;
+    }
+    window.rfGatewayApplySitePreset = function (sel) {
+        var key = sel.value;
+        sel.selectedIndex = 0;
+        var addTx = document.getElementById('addTx');
+        var addRx = document.getElementById('addRx');
+        if (!addTx || !addRx) return;
+        var map = {
+            counter: [18, -68],
+            room: [22, -72],
+            aisle: [28, -78],
+            warehouse: [32, -82],
+            max: ['', '']
+        };
+        var pair = map[key];
+        if (!pair) return;
+        pickClosest(addTx, pair[0]);
+        pickClosest(addRx, pair[1]);
+    };
+})();
+</script>
 </body>
 </html>

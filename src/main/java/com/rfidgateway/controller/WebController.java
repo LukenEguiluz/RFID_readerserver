@@ -6,6 +6,7 @@ import com.rfidgateway.model.Reader;
 import com.rfidgateway.model.ReaderBrand;
 import com.rfidgateway.model.ReaderGroup;
 import com.rfidgateway.model.ReaderOperationMode;
+import com.rfidgateway.reader.AntennaRfOptions;
 import com.rfidgateway.reader.ReaderManager;
 import com.rfidgateway.repository.AntennaRepository;
 import com.rfidgateway.repository.InventorySystemReaderRepository;
@@ -232,6 +233,9 @@ public class WebController {
                 model.addAttribute("antennas", antennaRepository.findByReaderIdOrderByPortNumberAsc(id));
                 if (readerManager != null) {
                     readerManager.queryHardwareCapabilities(id).ifPresent(h -> model.addAttribute("hardware", h));
+                    model.addAttribute("rfOptions", readerManager.getAntennaRfOptions(id));
+                } else {
+                    model.addAttribute("rfOptions", AntennaRfOptions.fallback());
                 }
                 return "reader-antennas";
             })
@@ -257,6 +261,9 @@ public class WebController {
     public String readerAntennaAdd(@PathVariable String readerId,
                                    @RequestParam Short portNumber,
                                    @RequestParam(required = false) String name,
+                                   @RequestParam(required = false) String txPowerDbm,
+                                   @RequestParam(required = false) String rxSensitivityDbm,
+                                   @RequestParam(defaultValue = "true") boolean enabled,
                                    RedirectAttributes redirect) {
         if (!readerRepository.existsById(readerId)) {
             return "redirect:/readers";
@@ -276,7 +283,9 @@ public class WebController {
             } else if (a.getName() == null || a.getName().isBlank()) {
                 a.setName("Puerto " + portNumber);
             }
-            a.setEnabled(true);
+            a.setEnabled(enabled);
+            a.setTxPowerDbm(parseOptionalDbm(txPowerDbm));
+            a.setRxSensitivityDbm(parseOptionalDbm(rxSensitivityDbm));
             antennaRepository.save(a);
             if (readerManager != null) {
                 readerManager.resetAntennas(readerId);
@@ -430,5 +439,12 @@ public class WebController {
             redirect.addFlashAttribute("error", "No se pudo eliminar el grupo.");
         }
         return "redirect:/groups";
+    }
+
+    private static Double parseOptionalDbm(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return Double.valueOf(raw.trim().replace(',', '.'));
     }
 }
