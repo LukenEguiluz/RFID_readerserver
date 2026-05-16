@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "epc_presence_events", indexes = {
@@ -17,8 +18,15 @@ import java.time.LocalDateTime;
 public class EpcPresenceEvent {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
+    private UUID id;
+
+    @PrePersist
+    protected void assignId() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
+        }
+    }
 
     @Column(name = "system_id", nullable = false, length = 64)
     private String systemId;

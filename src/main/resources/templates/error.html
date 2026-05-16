@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es" class="light">
 <head th:replace="~{fragments/dh-head :: dhHead('Error')}"></head>
-<body class="min-h-screen bg-background text-on-background">
+<body class="min-h-screen bg-background text-on-background" data-dh-tutorial-page="error">
 <aside th:replace="~{fragments/dh-nav :: dhSidebar(activeNav='home')}"></aside>
 <main class="ml-[260px] flex min-h-screen flex-col items-center justify-center bg-background p-margin-desktop">
-    <div class="w-full max-w-lg rounded-xl border border-outline-variant bg-surface-container-lowest p-xl shadow-sm">
+    <div id="dh-tour-error-card" class="w-full max-w-lg rounded-xl border border-outline-variant bg-surface-container-lowest p-xl shadow-sm">
         <div class="mb-lg flex justify-center">
             <img th:replace="~{fragments/dh-logo :: dhLogoHero}"/>
         </div>
@@ -19,5 +19,6 @@
         </p>
     </div>
 </main>
+<th:block th:replace="~{fragments/dh-tutorial-fab :: dhTutorialFab}"/>
 </body>
 </html>

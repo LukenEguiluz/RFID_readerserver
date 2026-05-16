@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <!-- Sidebar: th:replace="~{fragments/dh-nav :: dhSidebar(activeNav='readers')}" -->
-<aside th:fragment="dhSidebar (activeNav)"
+<aside th:fragment="dhSidebar (activeNav)" id="dh-tour-sidebar"
        class="fixed left-0 top-0 z-50 flex h-full w-[260px] flex-col gap-sm border-r border-outline-variant bg-on-secondary-fixed-variant py-xl px-md dark:border-outline dark:bg-inverse-surface">
-    <div class="mb-xl px-4">
+    <div id="dh-tour-sidebar-brand" class="mb-xl px-4">
         <a th:href="@{/}" class="flex flex-col gap-2">
             <img th:replace="~{fragments/dh-logo :: dhLogoSidebar}"/>
             <p class="text-[10px] uppercase tracking-widest text-secondary-fixed-dim">RFID Control Center</p>
         </a>
     </div>
-    <nav class="flex flex-col gap-xs">
+    <nav id="dh-tour-sidebar-nav" class="flex flex-col gap-xs">
         <a th:href="@{/}"
            class="flex items-center gap-md rounded-lg px-4 py-3 font-label-md text-label-md transition-all"
            th:classappend="${activeNav == 'home'} ? ' bg-primary-container font-bold text-on-primary-container ' : ' text-secondary-fixed-dim hover:bg-on-secondary-fixed hover:text-surface-bright '">
@@ -47,7 +47,7 @@
             <span>APIs</span>
         </a>
     </nav>
-    <div class="mt-auto border-t border-white/10 px-4 py-4">
+    <div id="dh-tour-sidebar-footer" class="mt-auto border-t border-white/10 px-4 py-4">
         <div class="flex items-center gap-sm">
             <img th:replace="~{fragments/dh-logo :: dhLogoSmall}"/>
             <div class="flex min-w-0 flex-col">
@@ -59,7 +59,7 @@
 </aside>
 
 <!-- Top bar: th:replace="~{fragments/dh-nav :: dhTopbar('Título')}" -->
-<header th:fragment="dhTopbar (pageTitle)"
+<header th:fragment="dhTopbar (pageTitle)" id="dh-tour-topbar"
         class="sticky top-0 z-40 flex h-16 w-full shrink-0 items-center justify-between border-b border-outline-variant bg-surface px-margin-desktop dark:border-outline dark:bg-surface-dim">
     <div class="flex min-w-0 flex-1 items-center gap-md">
         <a th:href="@{/}" class="shrink-0 rounded-lg outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary-container focus-visible:ring-offset-2" title="Inicio">
@@ -69,7 +69,7 @@
             th:text="${pageTitle}">Título</h2>
     </div>
     <div class="flex items-center gap-sm">
-        <a th:href="@{/api/status}" target="_blank" rel="noopener"
+        <a id="dh-tour-topbar-api-status" th:href="@{/api/status}" target="_blank" rel="noopener"
            class="hidden rounded-full border border-outline-variant/40 bg-surface-container-low px-md py-xs text-label-md font-label-md text-on-surface hover:bg-surface-container-high sm:inline-flex sm:items-center sm:gap-sm">
             <span class="material-symbols-outlined text-[18px] text-on-surface-variant">monitoring</span>
             API estado

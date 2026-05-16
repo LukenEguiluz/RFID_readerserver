@@ -83,8 +83,23 @@ public class InventoryEpcService {
         if (seen == null) {
             return;
         }
-        seen.add(epc);
         LocalDateTime now = LocalDateTime.now();
+        /* true = primera vez que este EPC aparece en este ciclo (sirve para historial ADD por ciclo). */
+        boolean firstInCycle = seen.add(epc);
+        if (!firstInCycle) {
+            /* Ya contó en este ciclo: solo refrescar estado si existe. */
+            Optional<InventorySystemEpcState> optRepeat = stateRepository.findBySystemIdAndEpc(systemId, epc);
+            if (optRepeat.isPresent()) {
+                InventorySystemEpcState s = optRepeat.get();
+                s.setLastSeenAt(now);
+                s.setPresent(true);
+                s.setLastReaderId(readerId);
+                s.setLastAntennaPort(antennaPort);
+                stateRepository.save(s);
+            }
+            return;
+        }
+
         Optional<InventorySystemEpcState> opt = stateRepository.findBySystemIdAndEpc(systemId, epc);
         if (opt.isEmpty()) {
             InventorySystemEpcState s = new InventorySystemEpcState();
@@ -114,10 +129,33 @@ public class InventoryEpcService {
             s.setLastReaderId(readerId);
             s.setLastAntennaPort(antennaPort);
             stateRepository.save(s);
+            /* Primera detección del EPC en este ciclo: ADD (reentrada tras REMOVE, o nueva pasada de ciclo). */
+            EpcPresenceEvent ev = new EpcPresenceEvent();
+            ev.setSystemId(systemId);
+            ev.setEpc(epc);
+            ev.setEventType(EpcPresenceEventType.ADD);
+            ev.setOccurredAt(now);
+            ev.setReaderId(readerId);
+            ev.setAntennaPort(antennaPort);
+            eventRepository.save(ev);
+            if (webSocketHandler != null) {
+                webSocketHandler.sendInventoryEpcAdd(systemId, epc, readerId, antennaPort, rssi, phase);
+            }
         }
     }
 
     private static String normalizeEpc(String epc) {
         return epc == null ? "" : epc.trim().toUpperCase();
+    }
+
+    /** True mientras el orquestador ejecuta un ciclo global para este sistema. */
+    public boolean isCycleActive(String systemId) {
+        return Boolean.TRUE.equals(cycleActive.get(systemId));
+    }
+
+    /** Cantidad de EPC distintos leídos en el ciclo actual (0 si no hay ciclo activo o aún no hay lecturas). */
+    public int getSeenThisCycleCount(String systemId) {
+        Set<String> s = seenThisCycle.get(systemId);
+        return s == null ? 0 : s.size();
     }
 }

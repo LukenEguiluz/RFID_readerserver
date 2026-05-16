@@ -6,7 +6,7 @@
 <main class="ml-[260px] flex min-h-screen flex-col bg-background">
     <header th:replace="~{fragments/dh-nav :: dhTopbar('Gestión de lectores')}"></header>
     <div class="custom-scrollbar flex-1 space-y-lg overflow-y-auto p-margin-desktop max-w-max-width">
-        <div class="flex flex-wrap items-center gap-sm">
+        <div id="dh-tour-readers-toolbar" class="flex flex-wrap items-center gap-sm">
             <a th:href="@{/}" class="inline-flex items-center gap-xs rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm font-label-md text-label-md text-on-surface hover:bg-surface-container-low">
                 <span class="material-symbols-outlined text-[18px]">arrow_back</span> Inicio
             </a>
@@ -40,7 +40,7 @@
             </div>
         </div>
 
-        <section th:if="${readers != null and !readers.empty}" class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+        <section th:if="${readers != null and !readers.empty}" id="dh-tour-readers-table" class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[960px] border-collapse text-left text-body-md">
                     <thead>
@@ -108,7 +108,7 @@
             </div>
         </section>
 
-        <section class="mt-xl space-y-md">
+        <section id="dh-tour-readers-groups" class="mt-xl space-y-md">
             <h2 class="font-headline-md text-headline-md text-on-background">Grupos de lectores</h2>
             <div th:if="${groups != null and !groups.empty}" class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
                 <div class="overflow-x-auto">
@@ -157,7 +157,7 @@
             </div>
         </section>
 
-        <div th:if="${readers == null or readers.empty}" class="rounded-xl border border-dashed border-outline-variant bg-surface-container-low px-lg py-xl text-center">
+        <div th:if="${readers == null or readers.empty}" id="dh-tour-readers-empty" class="rounded-xl border border-dashed border-outline-variant bg-surface-container-low px-lg py-xl text-center">
             <h3 class="font-title-md text-title-md text-on-surface">No hay lectores</h3>
             <p class="mt-sm text-body-md text-on-surface-variant">Añada el primer lector para comenzar.</p>
             <a th:href="@{/readers/new}" class="mt-md inline-flex items-center gap-sm rounded-lg bg-primary px-lg py-sm font-bold text-on-primary">Nuevo lector</a>
@@ -240,5 +240,6 @@
         }
     });
 </script>
+<th:block th:replace="~{fragments/dh-tutorial-fab :: dhTutorialFab}"/>
 </body>
 </html>

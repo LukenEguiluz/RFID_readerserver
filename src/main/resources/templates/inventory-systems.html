@@ -6,7 +6,7 @@
 <main class="ml-[260px] flex min-h-screen flex-col bg-background">
     <header th:replace="~{fragments/dh-nav :: dhTopbar('Inventario continuo')}"></header>
     <div class="custom-scrollbar flex-1 space-y-lg overflow-y-auto p-margin-desktop max-w-max-width">
-        <div class="flex flex-wrap items-end justify-between gap-md">
+        <div class="mb-lg flex flex-wrap items-end justify-between gap-md" id="dh-tour-inv-header">
             <div>
                 <h2 class="font-headline-lg text-headline-lg text-on-background">Sistemas</h2>
                 <p class="mt-xs max-w-2xl text-body-md text-on-surface-variant">Agrupa lectores, ciclo global y tiempo por lector.</p>
@@ -21,7 +21,7 @@
         <div th:if="${success}" class="rounded-xl border border-outline-variant bg-surface-container-low px-lg py-md text-body-md" th:text="${success}"></div>
         <div th:if="${error}" class="rounded-xl border border-error bg-error-container px-lg py-md text-body-md text-on-error-container" th:text="${error}"></div>
 
-        <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+        <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm" id="dh-tour-inv-table">
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[720px] border-collapse text-left text-body-md">
                     <thead>
@@ -56,11 +56,13 @@
             </div>
             <p class="border-t border-outline-variant px-lg py-md text-[12px] text-on-surface-variant">
                 API: <code class="rounded bg-surface-container-high px-1">/api/inventory-systems</code>,
+                <code class="rounded bg-surface-container-high px-1">/api/inventory-systems/{id}/live</code>,
                 <code class="rounded bg-surface-container-high px-1">/api/inventory-systems/{id}/epcs/current</code>,
                 WebSocket <code class="rounded bg-surface-container-high px-1">/ws/events</code>
             </p>
         </div>
     </div>
 </main>
+<th:block th:replace="~{fragments/dh-tutorial-fab :: dhTutorialFab}"/>
 </body>
 </html>

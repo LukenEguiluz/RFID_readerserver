@@ -9,7 +9,7 @@
         <div th:if="${success}" class="rounded-xl border border-outline-variant bg-surface-container-low px-lg py-md text-body-md text-on-secondary-fixed" th:text="${success}"></div>
         <div th:if="${error}" class="rounded-xl border border-error bg-error-container px-lg py-md text-body-md text-on-error-container" th:text="${error}"></div>
 
-        <div class="flex flex-col items-center gap-lg rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm sm:flex-row sm:items-center sm:justify-start sm:gap-xl">
+        <div id="dh-tour-home-welcome" class="flex flex-col items-center gap-lg rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm sm:flex-row sm:items-center sm:justify-start sm:gap-xl">
             <img th:replace="~{fragments/dh-logo :: dhLogoDashboard}"/>
             <div class="max-w-xl text-center sm:text-left">
                 <p class="font-headline-md text-headline-md text-on-background">doHealth RFID Gateway</p>
@@ -17,7 +17,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-12 gap-gutter">
+        <div id="dh-tour-home-stats" class="grid grid-cols-12 gap-gutter">
             <div class="col-span-12 flex flex-col justify-between rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm lg:col-span-4">
                 <div class="flex items-start justify-between">
                     <span class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">Lectores totales</span>
@@ -42,7 +42,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-gutter md:grid-cols-4">
+        <div id="dh-tour-home-shortcuts" class="grid grid-cols-2 gap-gutter md:grid-cols-4">
             <a th:href="@{/readers}" class="group flex flex-col items-center justify-center gap-sm rounded-xl border border-outline-variant bg-surface-container-lowest p-lg transition-all hover:bg-surface-container-low">
                 <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-container text-on-primary-container transition-transform group-hover:scale-105">
                     <span class="material-symbols-outlined text-[28px]">settings_remote</span>
@@ -69,7 +69,7 @@
             </a>
         </div>
 
-        <div class="flex flex-wrap gap-sm">
+        <div id="dh-tour-home-actions" class="flex flex-wrap gap-sm">
             <a th:href="@{/readers/new}" class="inline-flex items-center gap-sm rounded-lg bg-primary px-lg py-sm font-bold text-on-primary shadow-sm transition-all hover:bg-primary-container active:scale-[0.98]">
                 <span class="material-symbols-outlined text-[20px]">add</span>
                 Nuevo lector
@@ -81,7 +81,8 @@
         </div>
     </div>
 </main>
-<a th:href="@{/readers/new}" class="fixed bottom-8 right-8 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-container text-on-primary-container shadow-xl transition-transform hover:scale-105 active:scale-95 md:right-10" title="Nuevo lector">
+<th:block th:replace="~{fragments/dh-tutorial-fab :: dhTutorialFab}"/>
+<a id="dh-tour-home-fab" th:href="@{/readers/new}" class="fixed bottom-8 right-8 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-container text-on-primary-container shadow-xl transition-transform hover:scale-105 active:scale-95 md:right-10" title="Nuevo lector">
     <span class="material-symbols-outlined text-[30px]">add</span>
 </a>
 </body>

@@ -7,7 +7,7 @@
 <main class="ml-[260px] flex min-h-screen flex-col bg-background">
     <header th:replace="~{fragments/dh-nav :: dhTopbar(${pageTitle})}"></header>
     <div class="custom-scrollbar flex-1 overflow-y-auto p-margin-desktop max-w-max-width">
-        <div class="mx-auto max-w-xl rounded-xl border border-outline-variant bg-surface-container-lowest p-xl shadow-sm">
+        <div class="mx-auto max-w-xl rounded-xl border border-outline-variant bg-surface-container-lowest p-xl shadow-sm" id="dh-tour-group-form">
             <p class="mb-lg font-code-md text-code-md text-on-surface-variant" th:if="${group.id != null}" th:text="'ID: ' + ${group.id}"></p>
             <div th:if="${error}" class="mb-lg rounded-lg border border-error bg-error-container px-md py-sm text-body-md text-on-error-container" th:text="${error}"></div>
 
@@ -72,5 +72,6 @@
         </div>
     </div>
 </main>
+<th:block th:replace="~{fragments/dh-tutorial-fab :: dhTutorialFab}"/>
 </body>
 </html>

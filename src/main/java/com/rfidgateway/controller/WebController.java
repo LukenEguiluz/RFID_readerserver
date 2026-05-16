@@ -312,9 +312,13 @@ public class WebController {
     public String apiDocs(Model model) {
         try {
             model.addAttribute("readers", readerRepository.findAll() != null ? readerRepository.findAll() : Collections.emptyList());
+            model.addAttribute("groups", readerGroupRepository.findAll() != null ? readerGroupRepository.findAll() : Collections.emptyList());
+            model.addAttribute("inventorySystems", inventorySystemRepository.findAll() != null ? inventorySystemRepository.findAll() : Collections.emptyList());
         } catch (Exception e) {
             log.warn("Error cargando api-docs: {}", e.getMessage());
             model.addAttribute("readers", Collections.emptyList());
+            model.addAttribute("groups", Collections.emptyList());
+            model.addAttribute("inventorySystems", Collections.emptyList());
         }
         return "api-docs";
     }

@@ -6,7 +6,7 @@
 <main class="ml-[260px] flex min-h-screen flex-col bg-background">
     <header th:replace="~{fragments/dh-nav :: dhTopbar('Antenas del lector')}"></header>
     <div class="custom-scrollbar flex-1 space-y-lg overflow-y-auto p-margin-desktop max-w-max-width">
-        <div class="flex flex-wrap items-center gap-sm">
+        <div id="dh-tour-ant-breadcrumb" class="flex flex-wrap items-center gap-sm">
             <a th:href="@{/readers}" class="inline-flex items-center gap-xs rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-label-md text-on-surface hover:bg-surface-container-low">Lectores</a>
             <a th:href="@{/readers/{id}/edit(id=${reader.id})}" class="inline-flex items-center gap-xs rounded-lg border border-outline-variant px-md py-sm text-label-md text-primary hover:bg-surface-container-low">Editar lector</a>
         </div>
@@ -19,7 +19,7 @@
         <div th:if="${success}" class="rounded-xl border border-outline-variant bg-surface-container-low px-lg py-md text-body-md text-on-secondary-fixed" th:text="${success}"></div>
         <div th:if="${error}" class="rounded-xl border border-error bg-error-container px-lg py-md text-body-md text-on-error-container" th:text="${error}"></div>
 
-        <div class="space-y-md rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm" th:if="${rfOptions != null}">
+        <div class="space-y-md rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm" th:if="${rfOptions != null}" id="dh-tour-ant-rf">
             <h2 class="font-title-md text-title-md text-on-background">Potencia TX y sensibilidad RX</h2>
             <p class="text-body-md text-on-surface-variant">Con lector <strong class="text-on-surface">Impinj conectado</strong>, las listas salen del hardware; si no, valores de referencia.</p>
             <p class="flex flex-wrap gap-sm">
@@ -56,7 +56,7 @@
             </div>
         </div>
 
-        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm" th:if="${hardware != null}">
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm" th:if="${hardware != null}" id="dh-tour-ant-hardware">
             <h2 class="font-title-md text-title-md text-on-background">Hardware (Impinj)</h2>
             <dl class="mt-md grid grid-cols-1 gap-sm sm:grid-cols-[180px_1fr] sm:gap-x-md">
                 <dt class="text-label-md font-bold uppercase tracking-wide text-on-surface-variant">Modelo</dt>
@@ -76,7 +76,7 @@
             <p class="text-body-md text-on-surface">Detección automática solo para <strong>IMPINJ_OCTANE</strong>.</p>
         </div>
 
-        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm" th:if="${reader.brand != null and reader.brand.name() == 'IMPINJ_OCTANE'}">
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm" th:if="${reader.brand != null and reader.brand.name() == 'IMPINJ_OCTANE'}" id="dh-tour-ant-discover">
             <h2 class="font-title-md text-title-md text-on-background">Detectar antenas</h2>
             <p class="mt-sm text-body-md text-on-surface-variant">Requiere lector <strong class="text-on-surface">conectado</strong>.</p>
             <form class="mt-md" th:action="@{/readers/{id}/antennas/discover(id=${reader.id})}" method="post">
@@ -84,7 +84,7 @@
             </form>
         </div>
 
-        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm">
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm" id="dh-tour-ant-add">
             <h2 class="font-title-md text-title-md text-on-background">Añadir / actualizar por puerto</h2>
             <p class="mt-sm text-body-md text-on-surface-variant">ID: <code class="rounded bg-surface-container-high px-1 font-code-md text-primary" th:text="${reader.id} + '-antenna-'">x</code> + puerto</p>
             <form th:action="@{/readers/{rid}/antennas(rid=${reader.id})}" method="post" class="mt-lg grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-3">
@@ -221,5 +221,6 @@
     };
 })();
 </script>
+<th:block th:replace="~{fragments/dh-tutorial-fab :: dhTutorialFab}"/>
 </body>
 </html>

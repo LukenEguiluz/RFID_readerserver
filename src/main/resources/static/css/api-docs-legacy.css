@@ -75,6 +75,11 @@
             color: white;
         }
         
+        .method-delete {
+            background: #744210;
+            color: #fffbeb;
+        }
+        
         .endpoint-url {
             font-family: 'Courier New', monospace;
             background: #2d3748;
@@ -113,6 +118,7 @@
         .description {
             color: #666;
             margin: 10px 0;
+            line-height: 1.55;
         }
         
         .params {
@@ -145,7 +151,7 @@
             border-radius: 5px;
             margin: 10px 0;
             width: 100%;
-            max-width: 300px;
+            max-width: 400px;
         }
         
         .modal {
@@ -190,6 +196,7 @@
             border-radius: 5px;
             overflow-x: auto;
             font-size: 12px;
+            line-height: 1.45;
         }
         
         .status-badge {
@@ -210,3 +217,115 @@
             background: #fed7d7;
             color: #742a2a;
         }
+
+        /* --- Documentación ampliada --- */
+        .api-toc {
+            background: #edf2f7;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            border: 1px solid #cbd5e0;
+        }
+        .api-toc h3 {
+            margin-bottom: 10px;
+            color: #2d3748;
+            font-size: 1rem;
+        }
+        .api-toc ul {
+            list-style: none;
+            columns: 2;
+            column-gap: 24px;
+        }
+        @media (max-width: 768px) {
+            .api-toc ul { columns: 1; }
+        }
+        .api-toc li { margin: 4px 0; }
+        .api-toc a {
+            color: #c53030;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .api-toc a:hover { text-decoration: underline; }
+
+        .callout {
+            border-radius: 6px;
+            padding: 12px 14px;
+            margin: 12px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .callout-info {
+            background: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            color: #2c5282;
+        }
+        .callout-warn {
+            background: #fffaf0;
+            border-left: 4px solid #dd6b20;
+            color: #744210;
+        }
+
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+        .spec-table th,
+        .spec-table td {
+            border: 1px solid #e2e8f0;
+            padding: 8px 10px;
+            text-align: left;
+        }
+        .spec-table th {
+            background: #edf2f7;
+            color: #2d3748;
+        }
+        .spec-table code {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        details.example-block {
+            margin: 12px 0;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            background: #fff;
+        }
+        details.example-block > summary {
+            cursor: pointer;
+            padding: 10px 14px;
+            font-weight: 600;
+            color: #2d3748;
+            background: #f7fafc;
+            border-radius: 6px 6px 0 0;
+        }
+        details.example-block[open] > summary {
+            border-bottom: 1px solid #e2e8f0;
+        }
+        details.example-block pre {
+            margin: 0;
+            border-radius: 0 0 6px 6px;
+        }
+
+        .toolbar-api-docs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+            margin: 12px 0 20px;
+            padding: 14px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        .toolbar-api-docs label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 4px;
+        }
+        .toolbar-api-docs .field { min-width: 200px; }

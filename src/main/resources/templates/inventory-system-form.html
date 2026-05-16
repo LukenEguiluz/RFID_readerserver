@@ -7,12 +7,12 @@
 <main class="ml-[260px] flex min-h-screen flex-col bg-background">
     <header th:replace="~{fragments/dh-nav :: dhTopbar(${pageTitle})}"></header>
     <div class="custom-scrollbar flex-1 overflow-y-auto p-margin-desktop max-w-max-width">
-        <div class="mb-lg flex flex-wrap gap-sm">
+        <div id="dh-tour-inv-form-nav" class="mb-lg flex flex-wrap gap-sm">
             <a th:href="@{/inventory-systems}" class="inline-flex items-center gap-xs rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-label-md text-on-surface hover:bg-surface-container-low">Volver</a>
             <a th:if="${system.id != null}" th:href="@{/inventory-systems/{id}/epcs(id=${system.id})}"
                class="inline-flex items-center gap-xs rounded-lg border border-primary/30 bg-primary-container/10 px-md py-sm text-label-md font-bold text-primary hover:bg-primary-container/20">EPCs en vivo</a>
         </div>
-        <div class="mx-auto max-w-3xl rounded-xl border border-outline-variant bg-surface-container-lowest p-xl shadow-sm">
+        <div id="dh-tour-inv-form" class="mx-auto max-w-3xl rounded-xl border border-outline-variant bg-surface-container-lowest p-xl shadow-sm">
             <form th:action="${system.id != null} ? @{/inventory-systems/{id}/edit(id=${system.id})} : @{/inventory-systems}" method="post" class="space-y-lg">
                 <div th:if="${system.id == null}">
                     <label class="mb-xs block font-label-md text-label-md uppercase tracking-wide text-on-surface-variant" for="id">ID sistema *</label>
@@ -77,5 +77,6 @@
         </div>
     </div>
 </main>
+<th:block th:replace="~{fragments/dh-tutorial-fab :: dhTutorialFab}"/>
 </body>
 </html>

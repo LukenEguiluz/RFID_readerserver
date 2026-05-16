@@ -19,5 +19,7 @@ public interface InventorySystemEpcStateRepository extends JpaRepository<Invento
 
     List<InventorySystemEpcState> findBySystemIdAndPresentTrue(String systemId);
 
+    long countBySystemIdAndPresentTrue(String systemId);
+
     void deleteBySystemId(String systemId);
 }

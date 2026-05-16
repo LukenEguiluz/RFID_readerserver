@@ -1,9 +1,14 @@
 package com.rfidgateway.controller;
 
+import com.rfidgateway.inventory.InventoryEpcService;
 import com.rfidgateway.model.EpcPresenceEvent;
 import com.rfidgateway.model.InventorySystemEpcState;
+import com.rfidgateway.model.InventorySystemReader;
+import com.rfidgateway.model.Reader;
+import com.rfidgateway.model.ReaderOperationMode;
 import com.rfidgateway.repository.EpcPresenceEventRepository;
 import com.rfidgateway.repository.InventorySystemEpcStateRepository;
+import com.rfidgateway.repository.InventorySystemReaderRepository;
 import com.rfidgateway.repository.InventorySystemRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +40,12 @@ public class InventorySystemReadRestController {
 
     @Autowired
     private EpcPresenceEventRepository presenceEventRepository;
+
+    @Autowired
+    private InventorySystemReaderRepository memberRepository;
+
+    @Autowired
+    private InventoryEpcService inventoryEpcService;
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> listSystems() {
@@ -59,6 +71,56 @@ public class InventorySystemReadRestController {
                 m.put("name", s.getName());
                 m.put("globalCycleSeconds", s.getGlobalCycleSeconds());
                 m.put("enabled", s.getEnabled());
+                return ResponseEntity.ok(m);
+            })
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Vista en vivo del inventario continuo: ciclo activo, contadores y estado de lectores del sistema.
+     * Para la lista de EPC use {@code /epcs/current}; para stream use WebSocket {@code /ws/events} (eventos INVENTORY_*).
+     */
+    @GetMapping("/{id}/live")
+    public ResponseEntity<Map<String, Object>> liveContinuous(@PathVariable String id) {
+        return inventorySystemRepository.findById(id)
+            .map(system -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("systemId", system.getId());
+                m.put("name", system.getName());
+                m.put("globalCycleSeconds", system.getGlobalCycleSeconds());
+                m.put("enabled", system.getEnabled());
+                m.put("cycleActive", inventoryEpcService.isCycleActive(id));
+                m.put("uniqueEpcsThisCycle", inventoryEpcService.getSeenThisCycleCount(id));
+                m.put("presentEpcCount", epcStateRepository.countBySystemIdAndPresentTrue(id));
+
+                List<Map<String, Object>> readers = new ArrayList<>();
+                for (InventorySystemReader member : memberRepository.findBySystem_IdOrderByOrderIndexAsc(id)) {
+                    Reader r = member.getReader();
+                    if (r == null) {
+                        continue;
+                    }
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("readerId", r.getId());
+                    row.put("name", r.getName());
+                    row.put("hostname", r.getHostname());
+                    row.put("connected", Boolean.TRUE.equals(r.getIsConnected()));
+                    row.put("reading", Boolean.TRUE.equals(r.getIsReading()));
+                    row.put("readerEnabled", Boolean.TRUE.equals(r.getEnabled()));
+                    ReaderOperationMode mode = r.getOperationMode();
+                    row.put("operationMode", mode != null ? mode.name() : ReaderOperationMode.TUNNEL.name());
+                    row.put("inventorySystemId", r.getInventorySystemId());
+                    row.put("orderIndex", member.getOrderIndex());
+                    row.put("readerSlotSeconds", member.getReaderSlotSeconds());
+                    boolean synced = mode == ReaderOperationMode.CONTINUOUS && id.equals(r.getInventorySystemId());
+                    row.put("continuousSynced", synced);
+                    readers.add(row);
+                }
+                m.put("readers", readers);
+                m.put("links", Map.of(
+                    "epcsCurrent", "/api/inventory-systems/" + id + "/epcs/current",
+                    "events", "/api/inventory-systems/" + id + "/events",
+                    "websocket", "/ws/events"
+                ));
                 return ResponseEntity.ok(m);
             })
             .orElse(ResponseEntity.notFound().build());

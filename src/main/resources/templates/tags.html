@@ -10,7 +10,7 @@
     <header th:replace="~{fragments/dh-nav :: dhTopbar('Tags RFID')}"></header>
     <div class="custom-scrollbar flex-1 overflow-y-auto p-margin-desktop">
     <div class="container mx-auto max-w-[1400px]">
-        <div class="header">
+        <div class="header" id="dh-tour-tags-header">
             <div>
                 <h1>🏷️ Tags RFID Leídos</h1>
                 <div class="controls" style="margin-top: 10px;">
@@ -18,14 +18,14 @@
                     <span id="liveStatus">Desconectado</span>
                 </div>
             </div>
-            <div>
+            <div id="dh-tour-tags-controls">
                 <a href="/" class="btn">← Volver</a>
                 <button class="btn btn-success" onclick="toggleLive()" id="toggleLiveBtn">▶️ Iniciar Tiempo Real</button>
                 <button class="btn" onclick="loadTags()">🔄 Actualizar</button>
             </div>
         </div>
         
-        <div class="stats">
+        <div class="stats" id="dh-tour-tags-stats">
             <div class="stat-card">
                 <h3>Total Tags</h3>
                 <div class="value" id="totalTags">0</div>
@@ -44,7 +44,7 @@
             </div>
         </div>
         
-        <div class="filters">
+        <div class="filters" id="dh-tour-tags-filters">
             <h3>🔍 Filtros</h3>
             <div class="filter-group">
                 <div class="filter-item">
@@ -77,7 +77,7 @@
             </div>
         </div>
         
-        <div class="tags-container">
+        <div class="tags-container" id="dh-tour-tags-table">
             <div class="tags-header">
                 <h2>📋 Tags Detectados</h2>
                 <span id="tagsCount">0 tags</span>
@@ -339,6 +339,7 @@
             stopLive();
         };
     </script>
+<th:block th:replace="~{fragments/dh-tutorial-fab :: dhTutorialFab}"/>
 </body>
 </html>
 

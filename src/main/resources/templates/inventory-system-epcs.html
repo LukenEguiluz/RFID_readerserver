@@ -7,11 +7,11 @@
 <main class="ml-[260px] flex min-h-screen flex-col bg-background">
     <header th:replace="~{fragments/dh-nav :: dhTopbar(${pageTitle})}"></header>
     <div class="custom-scrollbar flex-1 space-y-lg overflow-y-auto p-margin-desktop max-w-max-width">
-        <div class="flex flex-wrap gap-sm">
+        <div id="dh-tour-inv-epcs-nav" class="flex flex-wrap gap-sm">
             <a th:href="@{/inventory-systems}" class="inline-flex items-center gap-xs rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-label-md text-on-surface hover:bg-surface-container-low">Lista sistemas</a>
             <a th:href="@{/inventory-systems/{id}/edit(id=${systemId})}" class="inline-flex items-center gap-xs rounded-lg border border-primary/30 bg-primary-container/10 px-md py-sm text-label-md font-bold text-primary hover:bg-primary-container/20">Editar sistema</a>
         </div>
-        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm">
+        <div id="dh-tour-inv-epcs-panel" class="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg shadow-sm">
             <p class="text-body-md text-on-surface"><strong th:text="${systemName}">Sistema</strong> · <code class="rounded bg-surface-container-high px-1 font-code-md text-code-md text-primary" th:text="${systemId}">id</code></p>
             <p class="mt-sm text-body-md text-on-surface-variant">EPC <em>presentes</em> en el ciclo. Actualización cada 2 s.</p>
             <div id="status" class="mt-md text-label-md text-on-surface-variant">Cargando…</div>
@@ -78,5 +78,6 @@
     setInterval(tick, 2000);
 })();
 </script>
+<th:block th:replace="~{fragments/dh-tutorial-fab :: dhTutorialFab}"/>
 </body>
 </html>
